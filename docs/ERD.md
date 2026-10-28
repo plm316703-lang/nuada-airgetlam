@@ -26,7 +26,8 @@ erDiagram
         bigint user_id FK,UK "회원과 1:1"
         varchar amputation_side "LEFT / RIGHT / BOTH"
         boolean research_consent "연구 동의 여부"
-        datetime consented_at
+        datetime consented_at 연구 동의 시간 
+        datetime consentWithdrawnAt 연구 동의 철회 시간
         varchar research_code UK "익명 코드 (예: P-0001)"
     }
     PATIENT_GUARDIANS {
