@@ -11,6 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -53,7 +55,13 @@ public class PatientGuardianRepositoryTest {
         //then : 확인
         //6. 연결 테이블에 2건이 저장되었는가?
         //count()는 테이블 전체 행 수를 세는 기본 메서드
-        assertThat(patientGuardianRepository.count()).isEqualTo(2);
+        assertThat(patientGuardianRepository.countByPatient(patient)).isEqualTo(2);
+        List<PatientGuardian> links = patientGuardianRepository.findAllByPatient(patient);
+        assertThat(links)
+                .extracting(PatientGuardian::getRelation)
+                .containsExactlyInAnyOrder(GuardianRelation.FAMILY, GuardianRelation.CAREGIVER);
+        assertThat(patientGuardianRepository.findAllByGuardian(guardian1)).hasSize(1);
+
     }
 
     @Test
