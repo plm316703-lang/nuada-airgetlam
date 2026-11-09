@@ -30,10 +30,10 @@ public class ResearcherAssignmentService {
         User researcher = userRepository.findById(researcherId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. id=" + researcherId));
 
-        //그 회원이 진짜 연구자 역활인가?
+        //그 회원이 진짜 연구자 역할인가?
         //enum은 == 로 비교할 수 있음
         if(researcher.getRole() != Role.RESEARCHER){
-            throw new IllegalArgumentException("연구자 역활의 회원만 배정받을 수 있습니다.");
+            throw new IllegalArgumentException("연구자 역할의 회원만 배정받을 수 있습니다.");
 
         }
 

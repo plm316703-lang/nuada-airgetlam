@@ -70,7 +70,7 @@ public class PatientGuardianRepositoryTest {
         //given : 준비
         //1) 환자 회원 1명 저장
         User patientUser = userRepository.save(
-                new User("fkfkfk315@naver.com", "1234","박민혁", Role.PATIENT));
+                new User("patient@test.com", "1234","태스트 환자", Role.PATIENT));
         //2) 보호자 회원 1명 저장
         User guardian = userRepository.save(
                 new User("guardian1@test.com", "1234", "홍엄마", Role.GUARDIAN));
