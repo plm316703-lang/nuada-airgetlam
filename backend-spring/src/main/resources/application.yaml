@@ -1,7 +1,7 @@
 # 공통 설정 — 비밀번호 같은 민감 정보는 여기에 절대 쓰지 않음
 spring:
 
-  applivation:
+  application:
     name: backend    #애플리케이션 이름
 
 
