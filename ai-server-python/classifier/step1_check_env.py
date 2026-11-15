@@ -28,3 +28,4 @@ dataset = BNCI2014_001()        # 데이터셋 "안내서" 객체를 만든다 (
 print("데이터셋 코드 :", dataset.code)           # 데이터셋 이름
 print("피험자 목록   :", dataset.subject_list)   # 몇 번 피험자들이 있는지
 print("상상 종류     :", dataset.event_id)       # 어떤 운동 상상(클래스)이 있는지
+print("피험자 수     :", len(dataset.subject_list)) #목록의 길이 = 피험자 수
