@@ -16,3 +16,5 @@ spring:
      properties:
       hibernate:
         format_sql: true # 출력되는 SQL을 보기 좋게 줄 바꿈
+gateway:
+  api-key: ${GATEWAY_API_KEY}

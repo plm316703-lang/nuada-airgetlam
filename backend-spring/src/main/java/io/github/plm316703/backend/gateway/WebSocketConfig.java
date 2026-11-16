@@ -16,10 +16,11 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final ClassifierWebSocketHandler classifierHandler; //@Component로 만들어진 담당자를 주입
+    private final ApiKeyHandshakeInterceptor apiKeyInterceptor;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry){
-        registry.addHandler(classifierHandler, "/ws/classifier");
-        // 아직 인증 없음 → 12-3에서 공유 비밀키 확인을 여기에 붙인다
+        registry.addHandler(classifierHandler, "/ws/classifier")
+                .addInterceptors(apiKeyInterceptor);   // 이 주소로 오는 연결은 문지기를 먼저 거친다
     }
 }
