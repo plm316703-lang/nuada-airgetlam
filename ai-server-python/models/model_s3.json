@@ -1,0 +1,36 @@
+{
+  "subject": 3,
+  "dataset": "BNCI2014_001",
+  "classes": [
+    "left_hand",
+    "right_hand"
+  ],
+  "threshold": 0.75,
+  "preprocess": {
+    "filters_hz": [
+      [
+        8,
+        32
+      ]
+    ],
+    "interval_s": [
+      2,
+      6
+    ],
+    "sfreq_hz": 250,
+    "n_channels": 22,
+    "n_times": 1001
+  },
+  "metrics_test_session": {
+    "accuracy_no_abstain": 0.903,
+    "answer_rate": 0.875,
+    "accuracy_answered": 0.937
+  },
+  "versions": {
+    "mne": "1.13.2",
+    "moabb": "1.7.2",
+    "scikit-learn": "1.9.1"
+  },
+  "trained_on": "0train",
+  "created": "2026-11-16"
+}
