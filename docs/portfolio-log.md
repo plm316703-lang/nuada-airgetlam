@@ -306,9 +306,62 @@
 
 ---
 
-## 4. 관문 (Spring)
+## 4. Spring 관문 (WebSocket Gateway) — 12-1 ~ 12-5
 
-(아직 없음)
+### 목표
+Python 판별기의 판단 결과를 Spring 관문이 받아, 믿을 수 있는 명령만 통과시킨다.
+원칙: 이상하면 움직이지 않는다 (페일세이프).
+
+### 구조
+Python 재생기 ─WebSocket─▶ 문지기(비밀키) ─▶ 핸들러 ─▶ 검사 4단계 ─▶ 판정(MOVE/ABSTAIN)
+
+| 단계 | 내용 | 클래스 |
+|---|---|---|
+| 12-1 | WebSocket 의존성 (Spring Boot 4.1.2) | build.gradle |
+| 12-2 | `/ws/classifier` 엔드포인트 | WebSocketConfig, ClassifierWebSocketHandler |
+| 12-3 | 공유 비밀키 검사 (X-API-Key, 환경 변수, 키 없으면 시작 실패) | ApiKeyHandshakeInterceptor |
+| 12-4 | Python → Spring 전송 (10개 전부 수신, 지연 약 1~2ms) | step12_replay_ws.py |
+| 12-5a | JSON → DTO 변환, 실패 시 INVALID_FORMAT | ClassifierMessage |
+| 12-5b | 필수 칸·범위·허용값·version 검사 | MessageValidator, RejectReason |
+| 12-5c | 연결별 seq 순서 검사 (중복·옛 메시지 거부, 건너뜀 경고) | SequenceTracker |
+| 12-5d | Python 판단과 관문 판단이 둘 다 MOVE일 때만 MOVE | DecisionGate |
+| 12-5e | 잘못된 메시지 14종 시험 | step12_reject_test.py |
+
+### 설계 결정과 이유
+- **숫자 칸은 감싼 타입(Integer, Double)**: 칸이 빠지면 0이 아니라 null → 빠진 칸을 감지
+- **version을 가장 먼저 검사**: 모르는 버전을 칸 오류로 잘못 진단하지 않기 위해
+- **허용값 목록(화이트리스트)**: decision은 "MOVE", "ABSTAIN"만 통과
+- **범위 검사는 "안에 있을 때만 통과"**: NaN은 모든 비교가 false라서 반대로 쓰면 통과됨
+- **관문은 메시지의 threshold를 믿지 않음**: 자기 설정(application.yaml)의 기준값으로 다시 계산.
+  검사받는 쪽이 검사 기준을 정하면 검사가 아니기 때문
+- **거부된 메시지는 seq 장부를 갱신하지 않음**: 이상한 번호 하나에 정상 메시지가 막히지 않게
+- **연결 종료 시 장부 삭제**: 메모리 누수 방지
+- **설정값이 없거나 범위 밖이면 시작 실패**: 기준 없이 돌아가는 상태를 원천 차단
+
+### 시험 결과 (12-5e): 14개 전부 기대와 일치
+| 시험 | 결과 |
+|---|---|
+| 정상 메시지 | 판정 MOVE |
+| 깨진 JSON / seq 타입 틀림 / NaN | INVALID_FORMAT |
+| confidence 없음 / 범위 밖 1.5 / decision 소문자 | INVALID_FIELD |
+| version 2 | UNSUPPORTED_VERSION |
+| 중복 seq / 옛 seq | OUT_OF_ORDER |
+| 낮은 확신도인데 MOVE 주장 / threshold를 0.1로 조작 | DECISION_MISMATCH |
+| seq 3 → 10 | 판정 + "missing=6" 경고 |
+
+재생 데이터(피험자 3, 10개 시행): MOVE 7, ABSTAIN 3, 거부 0
+- seq 3은 판별이 틀렸지만(정답 왼손, 판별 오른손) 확신도 0.513 < 0.75로 판단 보류 → 잘못된 움직임 방지
+
+### 겪은 문제와 해결
+| 문제 | 원인 | 배운 점 |
+|---|---|---|
+| `@Override` 빨간 줄 | 메서드 이름 오타 (beforHandshake) | Ctrl+O로 재정의 메서드 생성 |
+| 키가 콘솔에 출력됨 | "Python 콘솔로 실행" 옵션 | 옵션 끄기, 노출된 키는 교체 |
+| `PlaceholderResolutionException` | yaml에 gateway가 두 번 겹침 (gateway.gateway.…) | YAML은 들여쓰기가 소속, Caused by 맨 아래가 진짜 원인 |
+| `got multiple values for argument 'seq'` | 함수 매개변수 이름과 바꿀 칸 이름이 같음 | 위치 인자와 이름 인자가 같은 칸을 노리면 충돌 |
+
+### 다음
+판정·거부 기록 DB 저장, 워치독(STALE_COMMAND), 관제 화면 실시간 전달
 
 ---
 
