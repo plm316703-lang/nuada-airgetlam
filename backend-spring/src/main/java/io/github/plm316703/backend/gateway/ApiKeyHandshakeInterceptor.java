@@ -54,7 +54,7 @@ public class ApiKeyHandshakeInterceptor implements HandshakeInterceptor {
             response.setStatusCode(HttpStatus.UNAUTHORIZED);        // 401: 인증 안 됨
             return false;
         }
-        log.info("[인증 성공] 주소= {}", request.getRemoteAddress());
+        log.info("[인증 성공] addr={}", request.getRemoteAddress());
         return true;
     }
     /** 연결이 만들어진 뒤 호출. 지금은 할 일이 없다. */
