@@ -18,3 +18,4 @@ spring:
         format_sql: true # 출력되는 SQL을 보기 좋게 줄 바꿈
 gateway:
   api-key: ${GATEWAY_API_KEY}
+  move-threshold: 0.75   # 관문이 MOVE를 허용하는 최소 확신도 (Python 모델의 기준값과 같게 맞춤)
