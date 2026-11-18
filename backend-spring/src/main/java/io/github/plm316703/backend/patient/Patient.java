@@ -42,6 +42,9 @@ public class Patient {
     @Column(nullable = true)
     private LocalDateTime consentWithdrawnAt;   //연구 동의 철회환시간
 
+    @Column(nullable = true)
+    private LocalDateTime enrolledAt;   //연구 등록 시간 (연구책임자가 등록, 철회해도 유지)
+
 
     //익명 연구 코드, 중복 불가
     @Column(nullable = false, unique = true, length = 20)
@@ -76,6 +79,25 @@ public class Patient {
     public void withdrawConsent(){
         this.researchConsent = false;
         this.consentWithdrawnAt = LocalDateTime.now(); //동의 철회 순간의 시간 기록
+    }
+
+    /**
+     * 연구 등록 (연구책임자가 한다).
+     * 등록 기록은 동의를 철회해도 지우지 않는다 → 다시 동의하면 자동으로 다시 "참여 중"
+     */
+    public void enroll(){
+        if(this.enrolledAt != null){
+            throw new IllegalStateException("이미 연구에 등록된 환자입니다.");
+        }
+        this.enrolledAt = LocalDateTime.now();
+    }
+
+    /**
+     * 관문 규칙 ①: 지금 로봇팔을 써도 되는 "참여 중인 환자"인가?
+     * = 연구 등록 기록이 있고(enrolledAt) AND 지금 동의 중(researchConsent)
+     */
+    public boolean isParticipating(){
+        return this.enrolledAt != null && this.researchConsent;
     }
 
 }

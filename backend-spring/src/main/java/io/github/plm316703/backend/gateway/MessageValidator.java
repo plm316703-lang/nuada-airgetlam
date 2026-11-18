@@ -14,11 +14,13 @@ public class MessageValidator {
     /** 거부 결과: 사유(reason) + 사람이 읽을 설명(detail) */
     public record Rejection(RejectReason reason, String detail){}
 
-    //허용값 목록(화이트리스트) - 이안에 있는 값만 콩과
-    private static final int SUPPORTED_VERSION = 1;
+    //허용값 목록(화이트리스트) - 이 안에 있는 값만 통과
+    static final int SUPPORTED_VERSION = 2;   // 버전 2: 신호 품질 + 시간대 있는 timestamp
     private static final String TYPE_CLASSIFICATION = "classification";
     private static final Set<String> ALLOWED_INTENTS = Set.of("left_hand", "right_hand");
     private static final Set<String> ALLOWED_DECISIONS = Set.of("MOVE", "ABSTAIN");
+    // 판별기가 추정해서 보낼 수 있는 신호 문제 종류 (record.ErrorType 이름과 같음)
+    static final Set<String> ALLOWED_ISSUES = Set.of("ELECTRODE_CONTACT", "LINE_NOISE", "MUSCLE_ARTIFACT");
     private static final int MIN_SUBJECT = 1;   // BNCI2014_001 피험자 1~9번
     private static final int MAX_SUBJECT = 9;
 
@@ -58,7 +60,17 @@ public class MessageValidator {
         if (!ALLOWED_DECISIONS.contains(m.decision())) {
             return reject(RejectReason.INVALID_FIELD, "decision=" + m.decision());
         }
-        // trueLabel은 재생 데이터에만 있는 참고용 칸 → 없어도 통과 (검사하지 않음)
+        // ── ③ 신호 품질 칸 (버전 2 필수) ──
+        if (m.signal() == null) {
+            return reject(RejectReason.INVALID_FIELD, "signal 없음");
+        }
+        if (!isProbability(m.signal().quality())) {
+            return reject(RejectReason.INVALID_FIELD, "signal.quality=" + m.signal().quality());
+        }
+        if (m.signal().issue() != null && !ALLOWED_ISSUES.contains(m.signal().issue())) {
+            return reject(RejectReason.INVALID_FIELD, "signal.issue=" + m.signal().issue());
+        }
+        // trueLabel, scenario는 시연용 참고 칸 → 없어도 통과 (판단에 쓰지 않음)
 
         return Optional.empty();   // 모든 검사 통과
     }

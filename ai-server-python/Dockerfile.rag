@@ -1,0 +1,18 @@
+# ==========================================================
+# RAG 서버 이미지 (FastAPI + Chroma + Gemini)
+# 장비 오류가 생기면 Spring 관문이 /guide 로 점검 안내를 요청한다. 안내만 하고 제어는 하지 않는다.
+# ==========================================================
+FROM python:3.11-slim
+
+WORKDIR /app
+ENV PYTHONUNBUFFERED=1
+
+COPY requirements-rag.txt .
+RUN pip install --no-cache-dir -r requirements-rag.txt
+
+COPY rag ./rag
+
+# 컨테이너 밖(Spring 컨테이너)에서 접속해야 하므로 0.0.0.0 으로 연다
+ENV RAG_HOST=0.0.0.0 RAG_PORT=8000 RAG_DB_PATH=/data/chroma
+EXPOSE 8000
+CMD ["python", "rag/rag_server.py"]

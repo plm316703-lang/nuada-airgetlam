@@ -20,7 +20,9 @@ from moabb.paradigms import LeftRightImagery
 from websockets.sync.client import connect
 from websockets.exceptions import InvalidStatus, ConnectionClosed
 
-URL = "ws://localhost:8080/ws/classifier"
+# 관문 주소: 환경 변수 GATEWAY_URL이 있으면 그 값(Docker에서는 ws://backend:8080/...),
+#           없으면 지금처럼 내 PC의 Spring(localhost)으로 보낸다
+URL = os.environ.get("GATEWAY_URL", "ws://localhost:8080/ws/classifier")
 N_TRIALS = 10
 INTERVAL_S = 1.0
 

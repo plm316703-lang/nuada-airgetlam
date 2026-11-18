@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ResearcherAssignmentRepository extends JpaRepository<ResearcherAssignment, Long> {
 
     boolean existsByPatientAndResearcher(Patient patient, User researcher);
+
     long deleteAllByPatient(Patient patient);
 }

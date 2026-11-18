@@ -1,0 +1,9 @@
+# 재생기(realtime/replayer.py) 실행에 필요한 패키지
+# 버전은 모델(model_s3.joblib)을 학습한 conda 환경 nuada-bci 와 똑같이 고정한다
+# (scikit-learn 버전이 다르면 저장된 모델을 불러오지 못하거나 결과가 달라질 수 있음)
+mne==1.13.2
+moabb==1.7.2
+scikit-learn==1.9.1
+numpy==2.4.6
+websockets==15.0.1
+python-dotenv==1.2.4

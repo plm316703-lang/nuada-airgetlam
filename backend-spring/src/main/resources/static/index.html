@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nuada Airgetlám</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="login"><p class="muted">이동 중…</p></div>
+<script>
+  // 로그인되어 있으면 역할별 첫 화면, 아니면 로그인 화면
+  fetch('/api/auth/me', { credentials: 'same-origin' })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(me => { location.href = me.home; })
+    .catch(() => { location.href = '/login.html'; });
+</script>
+</body>
+</html>

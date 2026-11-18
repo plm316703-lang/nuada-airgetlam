@@ -28,6 +28,10 @@ public class DecisionGate {
         this.moveThreshold = moveThreshold;
     }
 
+    public double moveThreshold() {
+        return moveThreshold;
+    }
+
     public Optional<MessageValidator.Rejection> check(ClassifierMessage m) {
         // 관문이 직접 다시 계산한 판단 (12-5b를 통과했으므로 confidence는 null 아님, 0~1 보장)
         String gatewayDecision = m.confidence() >= moveThreshold ? "MOVE" : "ABSTAIN";

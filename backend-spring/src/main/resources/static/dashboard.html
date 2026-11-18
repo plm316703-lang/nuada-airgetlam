@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nuada Airgetlám — 관제</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- 그래프 라이브러리 (인터넷이 없으면 그래프만 숨기고 나머지는 동작) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><b>Nuada Airgetlám</b><span>뇌파 → 관문 → 로봇팔 관제</span></div>
+  <div class="who">
+    <span id="conn" class="conn off">● 실시간 끊김</span>
+    <span id="who"></span>
+    <button id="logout" type="button">로그아웃</button>
+  </div>
+</header>
+
+<main class="grid">
+  <!-- 1줄: 로봇팔 + 세션 -->
+  <section class="grid two">
+    <div class="panel">
+      <h2>로봇팔 <small id="armBadge"></small></h2>
+      <div class="arm-wrap">
+        <canvas id="arm" aria-label="로봇팔 상태 그림"></canvas>
+        <div>
+          <dl class="kv">
+            <dt>상태</dt><dd id="armState">-</dd>
+            <dt>팔꿈치</dt><dd id="armAngle">-</dd>
+            <dt>마지막 수신</dt><dd id="lastMsg">-</dd>
+            <dt>연속 정상</dt><dd id="cleanText">-</dd>
+          </dl>
+          <div class="meter" style="margin-top:6px" title="수동 재개에 필요한 연속 정상 메시지"><i id="cleanBar"></i></div>
+          <div id="stopReason"></div>
+          <div class="row" style="margin-top:12px">
+            <button id="btnResume" class="primary control" type="button">수동 재개</button>
+            <button id="btnReset" class="control" type="button">초기화</button>
+          </div>
+          <ul id="blockers" class="blockers"></ul>
+          <p class="muted" style="font-size:12px;margin:8px 0 0">왼손 상상 = 굽히기 / 오른손 상상 = 펴기.<br>
+            차단되면 그 자리에서 정지하고, 자동 재개는 없습니다.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>측정 세션 <small id="sessionBadge"></small></h2>
+      <div id="sessionBox"></div>
+      <h2 style="margin-top:16px">관문 기준값 <small>application.yaml</small></h2>
+      <dl class="kv" id="config"></dl>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">검사 순서: 형식 → 칸 → 순서 → 오래된 명령 → 세션 → 참여 환자 → 신호 품질 → 확신도·판단 일치</p>
+    </div>
+  </section>
+
+  <!-- 2줄: 그래프 -->
+  <section class="panel">
+    <h2>판별 확신도 · 신호 품질 <small>최근 60개</small></h2>
+    <div style="height:220px"><canvas id="chart"></canvas></div>
+    <p id="chartFallback" class="muted" style="display:none">그래프 라이브러리를 불러오지 못했습니다 (인터넷 연결 확인). 아래 기록 표는 정상 동작합니다.</p>
+  </section>
+
+  <!-- 3줄: 판단 기록 + 오류/RAG -->
+  <section class="grid two">
+    <div class="panel">
+      <h2>관문 판단 기록 <small>MOVE · ABSTAIN(보류) · HELD(정지 중) · BLOCKED(차단)</small></h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>시각</th><th>seq</th><th>의도</th><th>확신도</th><th>품질</th><th>결과</th><th>사유</th><th>각도</th><th>정답(시연)</th></tr></thead>
+          <tbody id="decisions"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>장비 오류 · RAG 점검 안내</h2>
+      <p class="rag-note">RAG는 매뉴얼과 오류 이력을 근거로 <b>안내만</b> 합니다. 팔의 재개·상태 변경은 하지 않습니다.</p>
+      <div id="errors" style="max-height:520px;overflow:auto"></div>
+    </div>
+  </section>
+
+  <!-- 4줄: 관제 동작 기록 + (연구책임자) 환자 관리 -->
+  <section class="grid two">
+    <div class="panel">
+      <h2>관제 동작 기록 <small>정지 · 재개 · 초기화 · 세션</small></h2>
+      <div class="table-wrap" style="max-height:260px">
+        <table>
+          <thead><tr><th>시각</th><th>동작</th><th>누가</th><th>내용</th></tr></thead>
+          <tbody id="controls"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>환자 <small id="patientsNote"></small></h2>
+      <div class="table-wrap" style="max-height:260px">
+        <table>
+          <thead><tr><th>연구 코드</th><th>이름</th><th>등록</th><th>동의</th><th>참여</th><th></th></tr></thead>
+          <tbody id="patients"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="/js/common.js"></script>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>
