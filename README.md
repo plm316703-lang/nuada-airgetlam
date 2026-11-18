@@ -54,6 +54,16 @@ nuada-airgetlam/
 - [ ] **3단계 — AI:** LLM 행동 후보 제안, 행동 기록 기반 RAG, 환자 확인 후 실행
 - [ ] **이후:** 3D 로봇팔, AI 자동 실행 모드, 실제 뇌파 장비 연동
 
+## 실행하기
+
+| 방법 | 문서 | 한 줄 요약 |
+|---|---|---|
+| 로컬 (Docker 없이) | [docs/local-run.md](docs/local-run.md) | JDK 21 + MySQL 8 + Python, `scripts\run-*.ps1` 세 개 |
+| Docker Compose | [docs/deploy.md](docs/deploy.md) | `docker compose up -d --build` → http://localhost:8080 |
+
+두 방법 모두 저장소 최상위 `.env`(견본: `.env.example`) 하나를 읽는다.
+관문 메시지 규격과 검사 순서는 [docs/message-spec.md](docs/message-spec.md).
+
 ## 개발 기록
 
 진행 과정과 배운 점은 `docs/` 폴더에 기록합니다.

@@ -1,0 +1,104 @@
+# ==========================================================
+# Nuada Airgetlám — 한 번에 실행하기
+#   docker compose up --build        → http://localhost:8080 (로그인 화면)
+#
+#   [replayer: Python 재생기] ──WebSocket──▶ [backend: Spring 관문 + 화면] ──JDBC──▶ [mysql]
+#                                                  │  ▲
+#                               오류 발생 시 /guide │  │ 점검 안내 (안내만, 제어 없음)
+#                                                  ▼  │
+#                                            [rag: FastAPI + Chroma + Gemini]
+#
+# 비밀 값은 같은 폴더의 .env 파일에서 읽는다 (.gitignore 대상, 형식은 .env.example).
+# Docker 없이 로컬로 실행하는 방법은 docs/local-run.md 참고.
+# ==========================================================
+
+services:
+
+  # ---------- 1. DB: 사람·동의·관문 기록 저장 ----------
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      TZ: Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4      # 한글 깨짐 방지
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      # 내 PC(127.0.0.1)에서만 DBeaver로 접속 가능. 3306은 로컬 MySQL과 겹칠 수 있어 3307 사용
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql           # 컨테이너를 지워도 데이터는 볼륨에 남는다
+    healthcheck:
+      # "DB가 접속을 받을 준비가 됐는가?" → 준비되기 전에 Spring이 붙으면 실패하므로 확인
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  # ---------- 2. RAG: 장비 오류 점검 안내 ----------
+  rag:
+    build:
+      context: ./ai-server-python
+      dockerfile: Dockerfile.rag
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}   # 없으면 RAG만 503 (관문·로봇팔은 정상 동작)
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
+      GEMINI_EMBED_MODEL: ${GEMINI_EMBED_MODEL:-gemini-embedding-001}
+    volumes:
+      - rag-data:/data                      # 매뉴얼 임베딩 색인 (매뉴얼이 바뀌면 자동으로 새로 만듦)
+    restart: unless-stopped
+
+  # ---------- 3. Spring 관문 서버 + 화면 ----------
+  backend:
+    build: ./backend-spring
+    depends_on:
+      mysql:
+        condition: service_healthy          # DB가 준비된 뒤에 시작
+    environment:
+      # Spring Boot는 SPRING_DATASOURCE_URL 같은 환경 변수를 spring.datasource.url 설정으로 읽는다
+      # 주소의 "mysql" = 위 서비스 이름 (Compose 안에서는 서비스 이름이 곧 컴퓨터 이름)
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false"
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      GATEWAY_API_KEY: ${GATEWAY_API_KEY}   # application.yaml 의 gateway.api-key 로 들어감
+      JWT_SECRET: ${JWT_SECRET}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+      RAG_URL: http://rag:8000
+      TZ: Asia/Seoul
+    ports:
+      - "8080:8080"
+    healthcheck:
+      # 8080 포트가 열렸는지(= 서버가 떴는지) 확인. 재생기는 이게 통과한 뒤에 시작한다
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  # ---------- 4. Python 재생기: 판별 결과 + 신호 품질을 관문으로 계속 전송 ----------
+  replayer:
+    build: ./ai-server-python
+    depends_on:
+      backend:
+        condition: service_healthy          # 관문이 준비된 뒤에 보내기 시작
+    environment:
+      GATEWAY_URL: ws://backend:8080/ws/classifier
+      GATEWAY_API_KEY: ${GATEWAY_API_KEY}   # Spring 과 같은 키여야 연결이 허락된다
+    volumes:
+      - mne-data:/root/mne_data             # 뇌파 데이터셋 캐시 (첫 실행 때만 다운로드)
+    # 끝없이 재생하고, 관문이 재시작되면 스스로 다시 연결한다
+    restart: unless-stopped
+    # 시연 중 오류 주입: docker attach nuada-airgetlam-replayer-1 → e/n/m/x/s/d/r + Enter
+    # (빠져나올 때는 Ctrl+P, Ctrl+Q — Ctrl+C 를 누르면 재생기가 꺼짐)
+    stdin_open: true
+    tty: true
+
+volumes:
+  mysql-data:
+  mne-data:
+  rag-data:

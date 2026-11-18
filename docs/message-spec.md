@@ -1,6 +1,6 @@
 # 메시지 규격: Python 판별 서버 → Spring 관문
 
-> 버전: 1 / 작성: 2026-11-16 / 상태: 초안
+> 버전: 2 / 작성: 2026-11-16, 개정: 2026-11-17 / 상태: 구현됨 (realtime/replayer.py ↔ GateService)
 > 전송: WebSocket, 텍스트 프레임 1개 = JSON 객체 1개 (UTF-8)
 > 방향: Python(클라이언트) → Spring(서버). 인증은 연결할 때 공유 비밀키(API 키)로 한다 (설정 결정 #23)
 
@@ -62,3 +62,47 @@
 |---|---|---|
 | 1 | 2026-11-16 | 최초 작성 (step10 재생기 메시지 기준) |
 | 1 | 2026-11-16 | 페일세이프 판단 규칙(DECISION_MISMATCH), 재연결 시 seq 초기화, 보류·거부 구분 추가 |
+
+---
+
+## 5. 버전 2 (2026-11-17) — 현재 규격
+
+버전 1에서 바뀐 칸만 정리한다. 관문은 **버전 2만** 받는다 (v1 메시지는 신호 품질이 없어 `UNSUPPORTED_VERSION`으로 거부).
+
+| 칸 | 타입 | 필수 | 의미 | 예 |
+|---|---|---|---|---|
+| version | 정수 | ○ | **2** | 2 |
+| timestamp | 문자열 (ISO-8601 + **시간대**) | ○ | 판별을 끝낸 시각. 시간대가 없으면 `INVALID_FIELD` (Docker 컨테이너 UTC와 PC 한국 시간이 섞여도 안전) | "2026-11-17T20:14:34.604+09:00" |
+| signal.quality | 실수 0~1 | ○ | 신호 품질 (실제 신호에서 계산: 평탄·튀는 채널, 60Hz, 40Hz 이상 비율) | 0.98 |
+| signal.issue | 문자열 또는 null | × | 판별기가 추정한 문제: ELECTRODE_CONTACT / LINE_NOISE / MUSCLE_ARTIFACT | "LINE_NOISE" |
+| signal.bad_channels | 문자열 배열 | × | 문제 채널 이름 | ["C3","Cz","C4"] |
+| scenario | 문자열 또는 null | × | **시연용 오류 주입** 이름. 있으면 화면·기록에 "주입" 표시 | "electrode" |
+
+예시:
+{"version": 2, "type": "classification", "seq": 13, "timestamp": "2026-11-17T20:58:01.120+09:00",
+"subject": 3, "intent": "right_hand", "confidence": 0.62, "threshold": 0.75, "decision": "ABSTAIN",
+"signal": {"quality": 0.1, "issue": "ELECTRODE_CONTACT", "bad_channels": ["C3", "Cz", "C4"]},
+"scenario": "electrode", "true_label": "left_hand"}
+
+### 5-1. 관문 검사 순서와 결과
+
+| 순서 | 검사 | 거부 사유 | 장비 오류 기록(RAG) |
+|---|---|---|---|
+| ① | JSON 형식 | INVALID_FORMAT | INVALID_MESSAGE |
+| ② | 칸·범위·버전 | INVALID_FIELD / UNSUPPORTED_VERSION | INVALID_MESSAGE |
+| ③ | seq 순서 | OUT_OF_ORDER | INVALID_MESSAGE |
+| ④ | 명령 유효시간 **2초** | STALE_COMMAND | STALE_COMMAND |
+| ⑤ | 열린 세션 + 피험자 일치 | NO_ACTIVE_SESSION / SUBJECT_MISMATCH | (정책 차단, 기록 안 함) |
+| ⑥ | 참여 중인 환자 (등록 + 동의) | NOT_PARTICIPATING | (정책 차단, 기록 안 함) |
+| ⑦ | 신호 품질 **≥ 0.6** | SIGNAL_QUALITY | issue 종류 또는 SIGNAL_QUALITY_LOW |
+| ⑧ | 확신도 기준 **0.75**로 다시 판단, 판별기와 일치 | DECISION_MISMATCH | DECISION_MISMATCH |
+| 워치독 | 메시지 없음 **3초** → 정지, **10초** → 초기화 필요 | PACKET_LOSS | PACKET_LOSS |
+
+통과한 메시지의 결과: `ABSTAIN`(정상 보류) / `MOVE`(팔 동작) / `HELD`(정상이지만 팔이 정지 상태라 실행 안 함).
+거부되면 `BLOCKED` + 팔 **그 자리 정지**. 자동 재개는 없고, 관제 담당자·연구책임자가 수동 재개를 요청하면
+서버가 "정지 상태 · 참여 환자 · 데이터 수신 중 · 연속 정상 3개"를 다시 검사한다. 기준값은 `application.yaml`의 `gateway.*`.
+
+### 4-1. 변경 이력 (추가)
+| 버전 | 날짜 | 내용 |
+|---|---|---|
+| 2 | 2026-11-17 | signal(신호 품질), scenario 추가, timestamp 시간대 필수, 명령 유효시간 2초·워치독 3초/10초 결정, 검사 ④~⑦ 구현 |

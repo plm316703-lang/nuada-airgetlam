@@ -1,0 +1,121 @@
+/* ==========================================================
+   Nuada Airgetlám — 공통 스타일
+   관제실 분위기의 어두운 화면 + "은팔(Airgetlám)"을 뜻하는 은색 포인트
+   ========================================================== */
+:root {
+  --bg: #0e1116;
+  --panel: #161b22;
+  --panel-2: #1c232c;
+  --line: #2a323d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --silver: #c9d1d9;
+  --accent: #9ecbff;
+  --ok: #3fb950;
+  --warn: #d29922;
+  --bad: #f85149;
+  --idle: #6e7681;
+  --radius: 10px;
+  --mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.5 "Pretendard", "Noto Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif; }
+a { color: var(--accent); }
+button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--panel-2); color: var(--text); padding: 7px 14px; }
+button:hover:not(:disabled) { border-color: var(--silver); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.primary { background: #1f6feb; border-color: #1f6feb; }
+button.danger { background: #3d1418; border-color: var(--bad); color: #ffd7d5; }
+select, input { font: inherit; background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+  border-radius: 8px; padding: 7px 10px; }
+
+/* ---------- 머리글 ---------- */
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 20px; border-bottom: 1px solid var(--line); background: #0b0e13; position: sticky; top: 0; z-index: 5; }
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand b { font-size: 18px; letter-spacing: .5px;
+  background: linear-gradient(90deg, #f0f3f6, #8b949e 60%, #f0f3f6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.brand span { color: var(--muted); font-size: 13px; }
+.who { color: var(--muted); font-size: 13px; display: flex; gap: 10px; align-items: center; }
+
+/* ---------- 배치 ---------- */
+main { padding: 16px 20px 40px; max-width: 1400px; margin: 0 auto; }
+.grid { display: grid; gap: 16px; }
+.grid.two { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+.grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 980px) { .grid.two, .grid.three { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; min-width: 0; }
+.panel h2 { font-size: 14px; margin: 0 0 10px; color: var(--silver); font-weight: 600; letter-spacing: .3px;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.panel h2 small { color: var(--muted); font-weight: 400; }
+.muted { color: var(--muted); }
+.mono { font-family: var(--mono); }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.spacer { flex: 1; }
+
+/* ---------- 상태 배지 ---------- */
+.badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  border: 1px solid currentColor; white-space: nowrap; }
+.st-RUNNING, .r-MOVE { color: var(--ok); }
+.st-STOPPED, .r-HELD { color: var(--warn); }
+.st-RESET_REQUIRED, .r-BLOCKED { color: var(--bad); }
+.st-IDLE, .r-ABSTAIN { color: var(--idle); }
+.injected { color: #d2a8ff; }
+
+/* ---------- 로봇팔 ---------- */
+.arm-wrap { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(200px, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 1180px) { .arm-wrap { grid-template-columns: 1fr; } }
+canvas#arm, canvas.arm { width: 100%; aspect-ratio: 4 / 3; background: radial-gradient(circle at 30% 30%, #18202a, #0d1117);
+  border: 1px solid var(--line); border-radius: var(--radius); display: block; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 13px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-family: var(--mono); overflow-wrap: anywhere; }
+.meter { height: 8px; background: var(--panel-2); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+.meter > i { display: block; height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.stop-reason { margin-top: 8px; padding: 8px 10px; border-left: 3px solid var(--warn); background: #241d0f; border-radius: 6px;
+  font-size: 13px; overflow-wrap: anywhere; }
+.stop-reason.bad { border-color: var(--bad); background: #2a1215; }
+.blockers { margin: 8px 0 0; padding-left: 18px; color: #ffb4ad; font-size: 13px; }
+
+/* ---------- 표 ---------- */
+.table-wrap { overflow: auto; max-height: 380px; border: 1px solid var(--line); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+th { position: sticky; top: 0; background: var(--panel-2); color: var(--muted); font-weight: 500; z-index: 1; }
+td.wrap { white-space: normal; min-width: 180px; overflow-wrap: anywhere; }
+tr.new { animation: flash 1.2s ease-out; }
+@keyframes flash { from { background: #233044; } to { background: transparent; } }
+
+/* ---------- 오류 + RAG ---------- */
+.err { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; background: var(--panel-2); }
+.err.open { border-color: var(--bad); }
+.err header { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+.err .detail { font-family: var(--mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.guide { margin-top: 8px; padding: 10px 12px; border-radius: 8px; background: #0f1a2a; border: 1px solid #1f3a5f;
+  white-space: pre-wrap; font-size: 13px; }
+.guide.fail { background: #22181a; border-color: #5f1f26; color: #ffb4ad; }
+.sources { margin: 6px 0 0; padding-left: 18px; font-size: 12px; color: var(--muted); }
+.rag-note { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+
+/* ---------- 로그인 ---------- */
+.login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+.login .card { width: 100%; max-width: 380px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; padding: 28px 24px; }
+.login h1 { margin: 0 0 4px; font-size: 22px; }
+.login p { margin: 0 0 20px; color: var(--muted); font-size: 13px; }
+.login label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 4px; }
+.login input { width: 100%; }
+.login button { width: 100%; margin-top: 18px; }
+.msg { min-height: 20px; margin-top: 10px; font-size: 13px; color: #ffb4ad; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.chips button { padding: 3px 9px; font-size: 12px; }
+
+/* ---------- 알림 ---------- */
+.toast { position: fixed; right: 16px; bottom: 16px; max-width: min(420px, calc(100vw - 32px)); padding: 10px 14px;
+  border-radius: 8px; background: #2a1215; border: 1px solid var(--bad); color: #ffd7d5; display: none; z-index: 20; }
+.toast.ok { background: #0f2a17; border-color: var(--ok); color: #c6f6d5; }
+.conn { font-size: 12px; }
+.conn.on { color: var(--ok); } .conn.off { color: var(--bad); }

@@ -1,21 +1,54 @@
 # 공통 설정 — 비밀번호 같은 민감 정보는 여기에 절대 쓰지 않음
+# 비밀 값은 저장소 최상위의 .env (커밋 안 함) 또는 환경 변수에서 읽는다.
 spring:
 
   application:
     name: backend    #애플리케이션 이름
 
+  config:
+    # 로컬 실행: IntelliJ/gradlew 작업 폴더가 backend-spring 이면 ../.env, 저장소 최상위면 ./.env 를 읽음
+    # [.properties] = ".env 파일을 KEY=VALUE 형식으로 읽어라"는 표시. optional = 없으면 무시 (Docker는 환경 변수)
+    import:
+      - optional:file:../.env[.properties]
+      - optional:file:./.env[.properties]
 
   profiles:
-    active: local # 실행할 때 application-local.yml도 함께 읽어오라는 뜻
+    active: local # 실행할 때 application-local.yaml 도 함께 읽어옴 (있을 때만, 개인 설정용)
+
+  datasource:
+    # 로컬 MySQL 기본값: localhost:3306 / DB·계정은 .env 의 MYSQL_* 값
+    # Docker 에서는 docker-compose.yml 의 SPRING_DATASOURCE_* 환경 변수가 이 값을 덮어씀
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${MYSQL_DATABASE:nuada}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+    username: ${MYSQL_USER:nuada}
+    password: ${MYSQL_PASSWORD:}
 
   jpa:
      open-in-view: false
      hibernate:
         ddl-auto: update #엔티티 클래스를 보고 테일블을 자동 생성/수정(개발용 설정)
-     show-sql: true  #실행되는 SQL을 콘솔에 출력(JPA 학습에 아주 유용)
+     show-sql: false  # 판별 메시지가 1초마다 와서 SQL 출력이 너무 많아 끔 (학습할 때는 true)
      properties:
       hibernate:
         format_sql: true # 출력되는 SQL을 보기 좋게 줄 바꿈
+
 gateway:
   api-key: ${GATEWAY_API_KEY}
-  move-threshold: 0.75   # 관문이 MOVE를 허용하는 최소 확신도 (Python 모델의 기준값과 같게 맞춤)
+  move-threshold: 0.75        # 관문이 MOVE를 허용하는 최소 확신도 (Python 모델의 기준값과 같게 맞춤)
+  min-signal-quality: 0.6     # 관문 규칙 ②: 이보다 낮은 신호 품질이면 차단
+  stale-command-ms: 2000      # 관문 규칙 ④: 판별 시각이 이보다 오래되면 STALE_COMMAND (사용자 결정 2초)
+  watchdog-stop-ms: 3000      # 이 시간 동안 메시지가 없으면 정지 (사용자 결정 3초)
+  watchdog-reset-ms: 10000    # 이 시간 이상 끊기면 초기화 필요 (사용자 결정 10초)
+  resume-required-clean: 3    # 수동 재개 조건: 연속 정상 메시지 수
+
+security:
+  jwt-secret: ${JWT_SECRET}           # 32자 이상. 없으면 서버가 시작하지 않음
+  jwt-lifetime-minutes: 120
+  cookie-secure: ${COOKIE_SECURE:false}   # HTTPS로 배포할 때 true
+
+rag:
+  base-url: ${RAG_URL:http://localhost:8000}
+  timeout-seconds: 40
+
+app:
+  demo:
+    password: ${DEMO_PASSWORD:}       # 시연 계정 비밀번호 (비어 있으면 시연 계정을 만들지 않음)

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nuada Airgetlám — 내 로봇팔</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><b>Nuada Airgetlám</b><span>환자 화면</span></div>
+  <div class="who"><span id="who"></span><button id="logout" type="button">로그아웃</button></div>
+</header>
+<main class="grid two">
+  <section class="panel">
+    <h2>내 로봇팔 <small id="armBadge"></small></h2>
+    <canvas id="arm" aria-label="내 로봇팔 상태 그림"></canvas>
+    <p id="armNote" class="muted" style="margin:10px 0 0"></p>
+  </section>
+  <section class="panel">
+    <h2>연구 참여</h2>
+    <dl class="kv" id="status"></dl>
+    <div id="consentBox" style="margin-top:14px"></div>
+    <p class="muted" style="font-size:12px;margin-top:14px">본인의 결정이 항상 우선합니다. 언제든 동의하거나 철회할 수 있습니다.</p>
+  </section>
+</main>
+<script src="/js/common.js"></script>
+<script>
+  (async function () {
+    await requireRole(['PATIENT']);
+    await refresh();
+    setInterval(() => refresh().catch(() => {}), 1000);   // 1초마다 내 팔 상태 갱신
+  })();
+
+  async function refresh() {
+    const s = await api('/api/me/patient');
+    document.getElementById('status').replaceChildren(
+      el('dt', {}, '이름'), el('dd', {}, s.name),
+      el('dt', {}, '연구 코드'), el('dd', {}, s.researchCode),
+      el('dt', {}, '연구 등록'), el('dd', {}, s.enrolled ? '등록됨' : '미등록 (연구책임자가 등록)'),
+      el('dt', {}, '연구 동의'), el('dd', {}, s.consent ? '동의함' : '동의하지 않음'),
+      el('dt', {}, '참여 상태'), el('dd', {}, s.participating ? '참여 중 (로봇팔 사용 가능)' : '참여 중 아님'),
+      el('dt', {}, '동의 시각'), el('dd', {}, s.consentedAt ? new Date(s.consentedAt).toLocaleString('ko-KR') : '-'),
+      el('dt', {}, '철회 시각'), el('dd', {}, s.consentWithdrawnAt ? new Date(s.consentWithdrawnAt).toLocaleString('ko-KR') : '-'),
+    );
+
+    const box = document.getElementById('consentBox');
+    if (box.dataset.consent !== String(s.consent)) {   // 상태가 바뀔 때만 다시 그림 (버튼 깜빡임 방지)
+      box.dataset.consent = String(s.consent);
+      box.replaceChildren(s.consent
+        ? el('button', { class: 'danger', type: 'button', onclick: withdraw }, '연구 동의 철회')
+        : el('button', { class: 'primary', type: 'button', onclick: consent }, '연구에 동의하기'));
+    }
+
+    const a = s.arm;
+    const canvas = document.getElementById('arm');
+    if (a) {
+      drawArm(canvas, a.angle, a.state);
+      document.getElementById('armBadge').replaceChildren(el('span', { class: `badge st-${a.state}` }, stateName(a.state)));
+      document.getElementById('armNote').textContent = a.stopReason ? `정지 사유: ${a.stopReason} — 관제 담당자가 확인 후 재개합니다.` : '관문을 통과한 명령만 팔을 움직입니다.';
+    } else {
+      drawArm(canvas, 90, 'IDLE');
+      document.getElementById('armBadge').replaceChildren(el('span', { class: 'badge st-IDLE' }, '세션 없음'));
+      document.getElementById('armNote').textContent = '지금 진행 중인 내 측정 세션이 없습니다.';
+    }
+  }
+
+  async function consent() {
+    try { await api('/api/me/patient/consent', { method: 'POST' }); toast('연구에 동의했습니다.', true); await refresh(); }
+    catch (e) { toast(e.message); }
+  }
+
+  async function withdraw() {
+    // 내 설계 결정: 철회 전에 데이터 삭제 방침을 반드시 안내한다
+    const ok = confirm('연구 동의를 철회하면:\n\n' +
+      '• 연구자 배정 등 연구 관련 데이터가 삭제됩니다.\n' +
+      '• 진행 중인 로봇팔 사용이 즉시 중단됩니다.\n' +
+      '• 철회 시각과 계정, 연구 등록 기록은 남습니다 (다시 동의하면 다시 참여할 수 있습니다).\n\n철회하시겠습니까?');
+    if (!ok) return;
+    try {
+      const r = await api('/api/me/patient/withdraw', { method: 'POST' });
+      toast(`철회했습니다. 삭제된 연구자 배정 ${r.deletedAssignments}건.`, true);
+      await refresh();
+    } catch (e) { toast(e.message); }
+  }
+</script>
+</body>
+</html>

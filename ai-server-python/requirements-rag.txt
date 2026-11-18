@@ -1,0 +1,8 @@
+# RAG 서버(rag/rag_server.py) 실행에 필요한 패키지 (재생기와 따로 설치 가능)
+fastapi==0.163.1
+uvicorn==0.54.0
+chromadb==1.5.9
+google-genai==3.4.0
+python-dotenv==1.2.4
+# 같은 가상환경에 재생기(moabb → botocore)를 함께 설치할 때 충돌 방지 (botocore 는 3 미만 요구)
+python-dateutil<3

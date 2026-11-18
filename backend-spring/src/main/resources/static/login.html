@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nuada Airgetlám — 로그인</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="login">
+  <form class="card" id="form" autocomplete="on">
+    <h1>Nuada Airgetlám</h1>
+    <p>생각으로 움직이는 은의 팔 · 뇌파–로봇팔 관제 시스템<br>
+      <span class="muted">연구용 프로토타입 (공개 뇌파 데이터 재생, 의료기기 아님)</span></p>
+
+    <label for="email">이메일</label>
+    <input id="email" name="email" type="email" required autocomplete="username">
+    <label for="password">비밀번호</label>
+    <input id="password" name="password" type="password" required autocomplete="current-password">
+    <button class="primary" type="submit">로그인</button>
+    <div class="msg" id="msg" role="alert"></div>
+
+    <div class="muted" style="font-size:12px;margin-top:10px">시연 계정 (비밀번호는 .env 의 DEMO_PASSWORD)</div>
+    <div class="chips" id="chips"></div>
+  </form>
+</div>
+<script src="/js/common.js"></script>
+<script>
+  // 시연 계정 이메일만 채워 주는 버튼 (비밀번호는 직접 입력)
+  const demo = [
+    ['operator@nuada.test', '관제 담당자'], ['pi@nuada.test', '연구책임자'], ['researcher@nuada.test', '연구자'],
+    ['patient@nuada.test', '환자'], ['guardian@nuada.test', '보호자'], ['admin@nuada.test', '관리자'],
+  ];
+  const chips = document.getElementById('chips');
+  demo.forEach(([email, label]) => chips.append(el('button', {
+    type: 'button', onclick: () => { document.getElementById('email').value = email; document.getElementById('password').focus(); },
+  }, label)));
+
+  document.getElementById('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('msg');
+    msg.textContent = '';
+    try {
+      const me = await api('/api/auth/login', { method: 'POST', body: {
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+      }});
+      location.href = me.home;   // 역할별 첫 화면
+    } catch (err) {
+      msg.textContent = err.message;
+    }
+  });
+</script>
+</body>
+</html>
