@@ -64,7 +64,7 @@ public class GateDecision {
     private String scenario;            // 재생기가 오류를 주입한 경우 시나리오 이름
 
     @Builder
-    private GateDecision(Long sessionId, String wsConnectionId, Integer subject,   // ← 2개 추가
+    private GateDecision(Long sessionId, String wsConnectionId, Integer subject,
                          Long seq, String commandTimestamp, String intent,
                          Double confidence, Double signalQuality, String signalIssue,
                          String pythonDecision, GateResult result, RejectReason reason,

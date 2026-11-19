@@ -147,7 +147,7 @@ public class GateService {
         } else {
             result = arm.applyMove(msg.intent()) ? GateResult.MOVE : GateResult.HELD;
         }
-        GateDecision saved = decisionRepository.save(decisionOf(connectionId, msg, result, null, null));   // ← connectionId 추가
+        GateDecision saved = decisionRepository.save(decisionOf(connectionId, msg, result, null, null));
         log.info("판정 id={} seq={} intent={} conf={} result={}", connectionId, msg.seq(), msg.intent(),
                 msg.confidence(), result);
         publish(saved);
@@ -169,7 +169,7 @@ public class GateService {
         boolean stoppedNow = arm.stop(rejection.reason().name());
         Long sessionId = arm.snapshot(Instant.now()).sessionId();
 
-        GateDecision saved = decisionRepository.save(decisionOf(connectionId, msg, GateResult.BLOCKED, rejection.reason(), rejection.detail()));   // ← connectionId 추가
+        GateDecision saved = decisionRepository.save(decisionOf(connectionId, msg, GateResult.BLOCKED, rejection.reason(), rejection.detail()));
 
         if (stoppedNow) {
             ControlEvent stop = controlRepository.save(new ControlEvent(sessionId, ControlEvent.Type.STOP, null,
@@ -192,12 +192,12 @@ public class GateService {
         hub.broadcast("arm", Views.ArmView.of(arm.snapshot(Instant.now())));
     }
 
-    private GateDecision decisionOf(String connectionId,                       // ← 추가: 어느 연결에서 온 메시지인지
+    private GateDecision decisionOf(String connectionId,
                                     ClassifierMessage m, GateResult result, RejectReason reason, String detail) {
         var s = arm.snapshot(Instant.now());
         var b = GateDecision.builder()
                 .sessionId(s.sessionId())
-                .wsConnectionId(connectionId)                                  // ← 추가: 메시지가 깨져도 연결 id는 항상 알 수 있음
+                .wsConnectionId(connectionId)            // if 바깥: 메시지가 깨져(m == null) 내용을 몰라도 출처는 남김
                 .result(result)
                 .reason(reason)
                 .detail(detail)
