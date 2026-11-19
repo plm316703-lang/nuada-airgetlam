@@ -385,6 +385,34 @@ Python 재생기 ─WebSocket─▶ 문지기(비밀키) ─▶ 핸들러 ─▶
 
 ## 8. Git·협업 관리
 
+### 미커밋 관문 기록 작업과 최신 main 병합 (PR #16) / 2026-11-19
+- 문제: 며칠 전 로컬 브랜치(feature/gate-decisions-db)에 커밋하지 않은 gateway/GateDecision 외 3개 파일이 있었고,
+  어제 main에 들어간 PR #14에는 같은 이름의 record/GateDecision이 이미 있음. 그대로 합쳐도 되는지 확인 필요
+- AI 도움: Claude — zip과 GitHub를 비교해 실제 차이는 "미커밋 파일 4개"뿐이고 나머지는 줄바꿈(CRLF) 차이임을 확인,
+  같은 이름 클래스 때문에 컴파일·서버 시작·DB 저장이 모두 실패함을 재현 컴파일로 증명, 아이디어만 옮기는 단계 안내
+- 내 판단과 행동:
+    - 파일 병합 대신 이전 설계에만 있던 두 칸(ws_connection_id, subject)만 record/GateDecision에 추가하기로 함
+    - 이미 데이터가 있는 테이블에 칸을 붙이므로 두 칸 모두 null 허용으로 설계
+    - 옛 파일 4개는 지우지 않고 저장소 밖(gate-old-backup)으로 옮겨 보관
+    - git config core.autocrlf true 설정, main 최신화 후 feature/gate-decision-merge 브랜치 생성
+    - 단계마다 서버를 실행해 확인하며 진행
+- 겪은 문제와 해결:
+    - JWT_SECRET 없음 → .env는 gitignore라 pull로 안 따라옴 → .env.example 복사 후 값 채움
+    - No module named 'mne' → conda 미활성으로 다른 Python(3.13) 실행 → Anaconda Prompt에서 nuada-bci 활성화
+    - GATEWAY_API_KEY 없음 → python-dotenv 미설치로 .env를 조용히 건너뜀 → 패키지 설치
+    - HTTP 401 → IntelliJ 실행 설정의 옛 키(환경 변수)가 .env보다 우선 → 실행 설정에서 삭제, 비밀 값은 .env 한 곳에서 관리
+    - Field 'decided_at' doesn't have a default value → 옛 엔티티가 만든 칸이 남음(ddl-auto: update는 추가만 함)
+      → 시험 기록뿐이고 외래 키도 없음을 확인한 뒤 DROP TABLE gate_decisions, 재시작으로 다시 생성
+- 검증:
+    - 조건: 세션 시작 후 재생기 실행 (피험자 3, 기준값 0.75)
+    - 예상 결과: 새 기록에 ws_connection_id, subject가 채워짐
+    - 실제 결과: seq 1~10 모두 같은 연결 id(b000507a-…), subject=3 저장.
+      팔 정지 상태라 MOVE → HELD, 확신도 0.75 미만(seq 3, 7)은 ABSTAIN (설계대로)
+- 증거: PR #16, 커밋 144c90f, 머지 커밋 01b0a6a, DBeaver 조회 화면
+- 한계와 다음 확인: 코드의 "← 추가" 표시 주석 정리 필요 / application-local.yaml(root)을 .env로 통일 필요 /
+  다른 PC에도 옛 gate_decisions 테이블이 있으면 같은 에러가 남
+- 상태: 검증
+
 ### 판별기 기준선 브랜치 정리와 머지 (PR #10) / 2026-11-16
 - 문제: step2~6 작업을 main에 합쳐야 함. 브랜치 이름(eeg-subject-selection)이 내용과 맞지 않음
 - AI 도움: Claude — 상태 확인 → 이름 변경 → step별 커밋 → 푸시 → PR → 로컬 정리 순서 안내, PR 본문 초안
