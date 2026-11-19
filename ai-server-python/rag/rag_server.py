@@ -36,6 +36,7 @@ DB_PATH = Path(os.environ.get("RAG_DB_PATH", HERE / ".chroma"))
 EMBED_MODEL = os.environ.get("GEMINI_EMBED_MODEL", "gemini-embedding-001")
 GEN_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
 MIN_SCORE = float(os.environ.get("RAG_MIN_SCORE", "0.55"))   # 이 유사도 이상인 같은 종류 근거가 있어야 "근거 충분"
+GEN_TIMEOUT_SECONDS = float(os.environ.get("RAG_GEN_TIMEOUT_SECONDS", "25"))  # Gemini 응답을 기다리는 최대 시간(초). Spring의 40초보다 짧아야 실패 사유를 돌려줄 수 있음
 TOP_K = 4
 
 SYSTEM_RULES = """너는 뇌파(EEG) 측정 장비의 점검을 돕는 안내자다. 반드시 지킬 규칙:
@@ -131,7 +132,14 @@ class Rag:
                 return
             try:
                 from google import genai
-                self.client = genai.Client(api_key=api_key)
+                from google.genai import types
+                self.client = genai.Client(
+                    api_key=api_key,
+                    http_options=types.HttpOptions(
+                        timeout=int(GEN_TIMEOUT_SECONDS * 1000),          # 이 라이브러리는 밀리초 단위 → 25초 = 25000
+                        retry_options=types.HttpRetryOptions(attempts=1),  # 실패하면 다시 시도하지 않음 (재시도가 붙으면 25초 x 횟수만큼 늘어남)
+                    ),
+                )
                 chunks = load_chunks()
                 if not chunks:
                     raise RuntimeError(f"매뉴얼이 없습니다: {MANUAL_DIR}")
@@ -214,20 +222,31 @@ def guide(req: GuideRequest):
         rag.init()                                   # 키를 나중에 넣은 경우 한 번 더 시도
     if not rag.ready():
         raise HTTPException(status_code=503, detail=rag.error)
+
+    # ── ① 근거 찾기: 실패하면 보여 줄 것이 없으므로 오류로 알린다 ──────────
     try:
         hits = rag.retrieve(req)
-        same_type = [s for _, m, s in hits if m["error_type"] == req.errorType]
-        sufficient = bool(same_type) and max(same_type) >= MIN_SCORE
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"근거 검색 실패: {type(e).__name__}: {e}")
+    same_type = [s for _, m, s in hits if m["error_type"] == req.errorType]
+    sufficient = bool(same_type) and max(same_type) >= MIN_SCORE
+    sources = [Source(doc=m["doc"], section=m["section"], score=round(s, 3)) for _, m, s in hits]
+
+    # ── ② 안내문 쓰기: 실패해도 ①의 근거는 살려서 돌려준다 (우아한 성능 저하) ──
+    try:
         answer = rag.generate(req, hits)
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Gemini 호출 실패: {type(e).__name__}: {e}")
-    if not answer:
-        raise HTTPException(status_code=502, detail="Gemini가 빈 답을 돌려줌")
-    if not sufficient and not answer.startswith("근거 부족"):
-        answer = "근거 부족: 매뉴얼을 직접 확인하세요\n" + answer
-    sources = [Source(doc=m["doc"], section=m["section"], score=round(s, 3)) for _, m, s in hits]
-    return GuideResponse(answer=answer, sources=sources, evidenceSufficient=sufficient, model=GEN_MODEL)
+        # 서버 창에만 자세한 이유를 남김 (시간 초과, 504 등). 화면에는 짧은 안내만
+        print(f"안내문 생성 실패 (제한 {GEN_TIMEOUT_SECONDS:.0f}초): {type(e).__name__}: {e}", flush=True)
+        answer = ""
 
+    if not answer:
+        answer = ("안내문 생성 실패: AI 응답이 늦거나 오류가 났습니다.\n"
+                  "아래 근거 매뉴얼을 직접 확인하세요.")
+    elif not sufficient and not answer.startswith("근거 부족"):
+        answer = "근거 부족: 매뉴얼을 직접 확인하세요\n" + answer
+
+    return GuideResponse(answer=answer, sources=sources, evidenceSufficient=sufficient, model=GEN_MODEL)
 
 if __name__ == "__main__":
     import uvicorn
