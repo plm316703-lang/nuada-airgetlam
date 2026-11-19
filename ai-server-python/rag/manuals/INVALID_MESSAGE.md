@@ -1,7 +1,10 @@
 # INVALID_MESSAGE — 메시지 규격 위반
 
 > Nuada Airgetlám 점검 매뉴얼 (연구용 프로토타입, 의료기기 매뉴얼 아님). 로봇팔 재개는 관제 화면의 수동 재개로만 한다.
-
+>
+> 참고 자료 (이 프로젝트의 설계 결정)
+> - docs/message-spec.md: 판별 메시지 규격 v2 (칸, 범위, 버전, seq 규칙)
+> - backend-spring/.../gateway/MessageValidator.java (형식·칸·범위·버전), SequenceTracker.java (순서)
 ## 증상
 - 관문이 INVALID_FORMAT, INVALID_FIELD, UNSUPPORTED_VERSION, OUT_OF_ORDER 로 메시지를 거부하고 로봇팔이 정지된다.
 

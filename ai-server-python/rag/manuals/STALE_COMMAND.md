@@ -1,6 +1,13 @@
 # STALE_COMMAND — 오래된 명령 (지연)
 
 > Nuada Airgetlám 점검 매뉴얼 (연구용 프로토타입, 의료기기 매뉴얼 아님). 로봇팔 재개는 관제 화면의 수동 재개로만 한다.
+>
+> 참고 자료 (이 프로젝트의 설계 결정)
+> - backend-spring/src/main/resources/application.yaml: gateway.stale-command-ms(2000)
+> - backend-spring/.../gateway/FreshnessChecker.java: 판별 시각과 받은 시각의 차이 검사
+> - docs/message-spec.md: timestamp는 시간대(+09:00) 포함 ISO-8601
+> - 숫자를 바꾸면 이 매뉴얼도 함께 고친다.
+
 
 ## 증상
 - 관문 판단 기록에 STALE_COMMAND(오래된 명령)가 나타나고 로봇팔이 정지된다.

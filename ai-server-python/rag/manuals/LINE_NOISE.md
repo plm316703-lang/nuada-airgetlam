@@ -1,6 +1,11 @@
 # LINE_NOISE — 전원 잡음 (60Hz)
 
 > Nuada Airgetlám 점검 매뉴얼 (연구용 프로토타입, 의료기기 매뉴얼 아님). 로봇팔 재개는 관제 화면의 수동 재개로만 한다.
+>
+> 참고 자료
+> - Ferree, T. C. 외 (2001). Scalp electrode impedance, infection risk, and EEG data quality. Clinical Neurophysiology. https://www.eeginfo.com/research/ElectrodeImpedance.pdf
+> - Plexon, Causes of Noise in Electrophysiological Recordings. https://plexon.com/causes-of-noise-in-electrophysiological-recordings/
+> - 한국 전원 규격 220V 60Hz (밀레코리아 안내문). https://m.miele.co.kr/media/ex/kr/others/Notice%20by%20Miele%20Korea.pdf
 
 ## 증상
 - 신호 품질이 급격히 낮아지고 판별기가 LINE_NOISE 를 보고한다.
@@ -8,8 +13,8 @@
 
 ## 원인
 - 주변 전기 기기(충전기, 모니터, 형광등, 전동 침대)의 전자기 간섭.
-- 기준(REF)·접지(GND) 전극 접촉 불량으로 공통 잡음이 제거되지 않음.
-- 장비 전원 케이블과 전극 케이블이 가까이 꼬여 있음, 접지되지 않은 멀티탭 사용.
+- 기준(REF)·접지(GND) 전극 접촉 불량으로 공통 잡음이 제거되지 않음. 접지 불량은 잡음 문제에서 가장 먼저 확인할 원인이다 (출처: Plexon).
+- 전극 임피던스가 높거나 측정·기준 전극의 임피던스 차이가 크면 60Hz 잡음이 그에 비례해 커진다 (출처: Ferree 외 2001).
 
 ## 확인 방법
 1. 최근에 켜거나 가까이 가져온 전기 기기가 있는지 확인한다.
