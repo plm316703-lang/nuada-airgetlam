@@ -26,6 +26,13 @@ public class GateDecision {
     @Column(name = "session_id")
     private Long sessionId;             // 세션이 없을 때 온 메시지도 기록하므로 null 허용
 
+    @Column(length = 36)
+    private String wsConnectionId;      // 어느 WebSocket 연결에서 온 메시지인지 (Spring이 붙여 주는 연결 id)
+    // 연결이 끊겼다 다시 붙으면 id가 바뀌므로, 기록을 연결 단위로 구분할 수 있음
+
+    private Integer subject;            // 메시지에 적힌 피험자 번호
+    // SUBJECT_MISMATCH로 차단됐을 때 "실제로 몇 번이 왔는지" 증거로 남음
+
     private Long seq;
     @Column(nullable = false)
     private LocalDateTime receivedAt;   // 관문이 받은 시각
@@ -57,11 +64,14 @@ public class GateDecision {
     private String scenario;            // 재생기가 오류를 주입한 경우 시나리오 이름
 
     @Builder
-    private GateDecision(Long sessionId, Long seq, String commandTimestamp, String intent,
+    private GateDecision(Long sessionId, String wsConnectionId, Integer subject,   // ← 2개 추가
+                         Long seq, String commandTimestamp, String intent,
                          Double confidence, Double signalQuality, String signalIssue,
                          String pythonDecision, GateResult result, RejectReason reason,
                          String detail, Double armAngleAfter, String trueLabel, String scenario) {
         this.sessionId = sessionId;
+        this.wsConnectionId = wsConnectionId;   // 매개변수로 받은 연결 id를 필드에 저장
+        this.subject = subject;                 // 매개변수로 받은 피험자 번호를 필드에 저장
         this.seq = seq;
         this.receivedAt = LocalDateTime.now();
         this.commandTimestamp = commandTimestamp;
