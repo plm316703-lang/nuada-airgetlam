@@ -45,6 +45,8 @@ public class GateDecision {
     private Double signalQuality;
     @Column(length = 30)
     private String signalIssue;
+    @Column(length = 200)
+    private String badChannels;          // 문제 채널 목록을 쉼표로 이은 글자 (예: "C3,Cz,C4"). 정상이면 null
     @Column(length = 10)
     private String pythonDecision;
 
@@ -66,7 +68,7 @@ public class GateDecision {
     @Builder
     private GateDecision(Long sessionId, String wsConnectionId, Integer subject,
                          Long seq, String commandTimestamp, String intent,
-                         Double confidence, Double signalQuality, String signalIssue,
+                         Double confidence, Double signalQuality, String signalIssue, String badChannels,   // ← badChannels 추가
                          String pythonDecision, GateResult result, RejectReason reason,
                          String detail, Double armAngleAfter, String trueLabel, String scenario) {
         this.sessionId = sessionId;
@@ -79,6 +81,7 @@ public class GateDecision {
         this.confidence = confidence;
         this.signalQuality = signalQuality;
         this.signalIssue = signalIssue;
+        this.badChannels = badChannels;
         this.pythonDecision = pythonDecision;
         this.result = result;
         this.reason = reason;
