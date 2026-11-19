@@ -1,6 +1,11 @@
 # SIGNAL_QUALITY_LOW — 신호 품질 저하 (원인 불명)
 
 > Nuada Airgetlám 점검 매뉴얼 (연구용 프로토타입, 의료기기 매뉴얼 아님). 로봇팔 재개는 관제 화면의 수동 재개로만 한다.
+>
+> 참고 자료
+> - FieldTrip, How can I inspect the electrode impedances of my data? (임피던스가 높을수록 신호 대 잡음비가 낮아짐). https://www.fieldtriptoolbox.org/faq/preproc/dataformat/impedancecheck/
+> - OpenBCI GUI 위젯 안내 (Railed 경고 = 보통 전극 접촉 불량). https://docs.openbci.com/Software/OpenBCISoftware/GUIWidgets/
+> - 이 매뉴얼의 원인별 점검은 ELECTRODE_CONTACT, LINE_NOISE, MUSCLE_ARTIFACT 매뉴얼의 출처를 따른다.
 
 ## 증상
 - 신호 품질이 기준(0.6) 아래지만 판별기가 특정 원인(전극·전원·근육)을 지목하지 못한다.

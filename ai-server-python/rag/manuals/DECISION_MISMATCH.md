@@ -1,6 +1,12 @@
 # DECISION_MISMATCH — 판단 불일치
 
 > Nuada Airgetlám 점검 매뉴얼 (연구용 프로토타입, 의료기기 매뉴얼 아님). 로봇팔 재개는 관제 화면의 수동 재개로만 한다.
+>
+> 참고 자료 (이 프로젝트의 설계 결정)
+> - backend-spring/src/main/resources/application.yaml: gateway.move-threshold(0.75)
+> - backend-spring/.../gateway/DecisionGate.java: 관문이 확신도 기준을 다시 계산해 판별기의 판단과 비교
+> - ai-server-python/models/model_s3.json: 판별기 기준값 0.75 (관문 기준과 같게 맞춤)
+
 
 ## 증상
 - 판별기가 보낸 판단(MOVE/ABSTAIN)과 관문이 같은 확신도로 다시 계산한 판단이 다르다.

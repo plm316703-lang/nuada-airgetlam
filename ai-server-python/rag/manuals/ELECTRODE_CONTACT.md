@@ -1,6 +1,11 @@
 # ELECTRODE_CONTACT — 전극 접촉 불량
 
 > Nuada Airgetlám 점검 매뉴얼 (연구용 프로토타입, 의료기기 매뉴얼 아님). 로봇팔 재개는 관제 화면의 수동 재개로만 한다.
+> 참고 자료
+> - Jones, M. S. (2015). Comparing DC Offset and Impedance Readings in the Assessment of Electrode Connection Quality. NeuroRegulation. https://www.neuroregulation.org/article/download/14604/9609
+> - Brain Products, actiCAP 문제 해결 안내 (CAP trouble shooting). https://ibacs.media.uconn.edu/wp-content/uploads/sites/1404/2024/03/CAP-trouble-shooting.pdf
+> - 습식·건식 전극 비교 리뷰 (PMC4168519). https://pmc.ncbi.nlm.nih.gov/articles/PMC4168519
+
 
 ## 증상
 - 관제 화면 신호 품질이 기준(0.6) 아래로 떨어지고, 판별기가 ELECTRODE_CONTACT 와 문제 채널(예: C3, Cz, C4)을 보고한다.
@@ -14,7 +19,7 @@
 
 ## 확인 방법
 1. 관제 화면의 문제 채널 목록을 확인한다 (bad_channels).
-2. 장비 소프트웨어에서 해당 채널 임피던스를 측정한다. 일반적으로 습식 전극은 수십 kΩ 이하를 목표로 한다 (장비 설명서 기준 우선).
+2. 장비 소프트웨어에서 해당 채널 임피던스를 측정한다. 수동 습식 전극은 전통적으로 5 kΩ 이하를 목표로 하고, 능동 전극 장비는 제조사 기준을 따른다 (예: Brain Products 능동 전극 기본값 좋음 25 kΩ·나쁨 60 kΩ). 장비 설명서 기준이 우선이다 (출처: Jones 2015; Brain Products actiCAP 문제 해결 안내).
 3. 캡 위치(Cz가 정수리 중앙인지)와 턱끈 고정 상태를 눈으로 확인한다.
 4. 케이블이 당겨지거나 의자·침대에 눌려 있지 않은지 확인한다.
 

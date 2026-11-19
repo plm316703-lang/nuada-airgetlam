@@ -1,6 +1,11 @@
 # PACKET_LOSS — 연결 끊김 (워치독)
 
 > Nuada Airgetlám 점검 매뉴얼 (연구용 프로토타입, 의료기기 매뉴얼 아님). 로봇팔 재개는 관제 화면의 수동 재개로만 한다.
+>
+> 참고 자료 (이 프로젝트의 설계 결정)
+> - backend-spring/src/main/resources/application.yaml: gateway.watchdog-stop-ms(3000), gateway.watchdog-reset-ms(10000)
+> - backend-spring/.../arm/Watchdog.java: 수신이 끊긴 시간을 재서 정지·초기화 필요를 판단
+> - 숫자를 바꾸면 이 매뉴얼도 함께 고친다.
 
 ## 증상
 - 관제 화면의 "마지막 수신" 시간이 계속 늘어나고, 3초가 지나면 로봇팔이 정지되며 PACKET_LOSS 가 기록된다.
