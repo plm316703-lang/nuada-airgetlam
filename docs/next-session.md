@@ -42,7 +42,7 @@
 - `gateway/GateService.java`: `joinChannels(List<String>)` 도우미 (목록 → `"C3,Cz,C4"`, 비면 null, 200자 자르기),
   `decisionOf()`의 `if (m.signal() != null)` 안에서 `.badChannels(joinChannels(m.signal().badChannels()))`
 
-### 2-2. ⚠ 아직 실행 확인 전 → 가장 먼저 할 것
+### 2-2. ✅ 실행 확인 완료 (11/20, 사용자 확인: 정상 작동)
 1. Spring 실행 (IntelliJ `BackendApplication` ▶) → `Started BackendApplication` 확인
 2. DBeaver에서 `DESC nuada.gate_decisions;` → `bad_channels varchar(200)`, Null = YES 확인
 3. 재생기 실행 후 `e` 주입 → `SELECT id, seq, result, signal_issue, bad_channels FROM nuada.gate_decisions ORDER BY id DESC LIMIT 10;`
