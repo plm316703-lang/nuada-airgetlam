@@ -35,6 +35,14 @@
   if (new URLSearchParams(location.search).get('reason') === 'idle') {
     document.getElementById('msg').textContent = '오랫동안 조작이 없어 안전을 위해 로그아웃되었습니다. 다시 로그인해 주세요.';
   }
+  // 초대로 가입을 마치고 왔으면 이메일을 채워 주고 비밀번호 칸으로 (이메일은 # 뒤라 서버 기록에 남지 않음)
+  if (new URLSearchParams(location.search).get('joined') === '1') {
+    document.getElementById('email').value = decodeURIComponent(location.hash.slice(1));
+    document.getElementById('msg').textContent = '가입을 마쳤어요. 방금 정한 비밀번호로 로그인해 주세요.';
+    document.getElementById('msg').style.color = 'var(--ok)';
+    history.replaceState(null, '', location.pathname);
+    document.getElementById('password').focus();
+  }
 
   const chips = document.getElementById('chips');
   demo.forEach(([email, label]) => chips.append(el('button', {

@@ -279,20 +279,34 @@ async function loadPatients() {
   let researchers = [];
   if (me.role === 'PRINCIPAL_INVESTIGATOR') researchers = await api('/api/researchers');
 
+  const isPi = me.role === 'PRINCIPAL_INVESTIGATOR';
+  renderPatientTools(isPi);
+
   const tbody = document.getElementById('patients');
   tbody.replaceChildren(...patientsCache.map(p => {
     const actions = el('td', {});
-    if (me.role === 'PRINCIPAL_INVESTIGATOR') {
+    if (isPi) {
       if (!p.enrolled) {
         actions.append(el('button', { type: 'button', onclick: () => enroll(p.id) }, '연구 등록'));
       } else if (p.consent && researchers.length) {
         const sel = el('select', { 'aria-label': '배정할 연구자' }, ...researchers.map(r => el('option', { value: r.id }, r.name)));
         actions.append(sel, ' ', el('button', { type: 'button', onclick: () => assign(p.id, sel.value) }, '배정'));
       }
+      // 초대 관련: 가입 전이면 다시 초대, 언제나 보호자 초대 가능 (연구책임자만)
+      if (p.invitePending) actions.append(' ', el('button', { type: 'button', onclick: () => reinvite(p.userId, p.researchCode) }, '다시 초대'));
+      actions.append(' ', el('button', { type: 'button', onclick: () => showGuardianForm(p) }, '보호자 초대'));
+      if (p.guardians && p.guardians.length) {
+        actions.append(el('div', { class: 'muted', style: 'font-size:12px;margin-top:4px' }, '보호자: ',
+          ...p.guardians.flatMap((g, i) => [i ? ', ' : '', `${g.name}(${RELATION_KO[g.relation] || g.relation})`,
+            g.invitePending ? el('button', { type: 'button', style: 'margin-left:4px;padding:1px 6px;font-size:11px',
+              onclick: () => reinvite(g.userId, g.name) }, '다시 초대') : ''])));
+      }
     }
     return el('tr', {},
       el('td', { class: 'mono' }, p.researchCode),
-      el('td', {}, p.displayName || el('span', { class: 'muted' }, '비공개')),
+      el('td', {}, p.displayName || el('span', { class: 'muted' }, '비공개'),
+        // 가입 전 환자는 로그인할 수 없으므로 상태를 보여 준다 (등록·동의와는 별개)
+        p.invitePending ? el('span', { class: 'badge r-HELD', style: 'margin-left:6px' }, '초대 대기') : ''),
       el('td', {}, p.enrolled ? '✓' : '—'),
       el('td', {}, p.consent ? '✓' : '—'),
       el('td', {}, el('span', { class: `badge ${p.participating ? 'r-MOVE' : 'r-ABSTAIN'}` }, p.participating ? '참여 중' : '아님')),
@@ -300,6 +314,111 @@ async function loadPatients() {
   }));
   // 세션이 없을 때 시작 목록도 새로 그림
   if (arm && arm.sessionId === null) renderSession(null);
+}
+
+// ───────────── 환자 등록·보호자 초대 (연구책임자, R4) ─────────────
+
+const RELATION_KO = { FAMILY: '가족', CAREGIVER: '간병인', OTHER: '기타' };
+const SIDE_KO = { LEFT_ARM: '왼팔', RIGHT_ARM: '오른팔', BOTH_ARMS: '양팔' };
+
+/** 표 위의 입력 칸. 연구책임자가 아니면 비워 둔다 (서버도 403으로 막음) */
+function renderPatientTools(isPi) {
+  const box = document.getElementById('patientTools');
+  if (!isPi) { box.replaceChildren(); return; }
+  if (box.dataset.mode) return;   // 세션 시작·종료로 환자 목록을 다시 읽어도 입력 중인 칸이 지워지지 않게, 이미 그려져 있으면 그대로 둠
+  showRegisterButton();
+}
+
+function showRegisterButton() {
+  const box = document.getElementById('patientTools');
+  box.dataset.mode = 'idle';
+  box.replaceChildren(el('div', { class: 'row', style: 'margin-bottom:10px' },
+    el('button', { type: 'button', class: 'primary', onclick: showRegisterForm }, '환자 등록')));
+}
+
+function showRegisterForm() {
+  const box = document.getElementById('patientTools');
+  box.dataset.mode = 'register';
+  const name = el('input', { type: 'text', required: true, maxlength: 50, placeholder: '이름', 'aria-label': '환자 이름' });
+  const email = el('input', { type: 'email', required: true, maxlength: 100, placeholder: '이메일', 'aria-label': '환자 이메일' });
+  const side = el('select', { 'aria-label': '절단 부위' },
+    ...Object.entries(SIDE_KO).map(([v, t]) => el('option', { value: v }, t)));
+  const form = el('form', { class: 'row', style: 'margin-bottom:10px' }, name, email, side,
+    el('button', { type: 'submit', class: 'primary' }, '등록하고 초대 링크 만들기'),
+    el('button', { type: 'button', onclick: showRegisterButton }, '취소'));
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      const r = await api('/api/patients', { method: 'POST',
+        body: { name: name.value.trim(), email: email.value.trim(), amputationSide: side.value } });
+      showInvite(`환자 ${r.email}을(를) 등록했습니다. 연구 등록·동의는 이후 따로 진행합니다.`, r);
+      showRegisterButton();
+      await loadPatients();
+    } catch (err) { toast(err.message); }
+  });
+  box.replaceChildren(el('p', { class: 'muted', style: 'font-size:12px;margin:0 0 6px' },
+    '환자 계정을 만들고 초대 링크를 발급합니다. 환자가 링크로 들어와 직접 비밀번호를 정합니다.'), form);
+  name.focus();
+}
+
+function showGuardianForm(p) {
+  const box = document.getElementById('patientTools');
+  box.dataset.mode = 'guardian';
+  const name = el('input', { type: 'text', required: true, maxlength: 50, placeholder: '보호자 이름', 'aria-label': '보호자 이름' });
+  const email = el('input', { type: 'email', required: true, maxlength: 100, placeholder: '보호자 이메일', 'aria-label': '보호자 이메일' });
+  const relation = el('select', { 'aria-label': '관계' },
+    ...Object.entries(RELATION_KO).map(([v, t]) => el('option', { value: v }, t)));
+  // 신분 확인은 사람이 직접 하는 일이라, 확인했다는 "표시"를 반드시 받는다 (서버도 체크 없으면 거절)
+  const checked = el('input', { type: 'checkbox', id: 'idChecked', required: true });
+  const form = el('form', { class: 'row', style: 'margin-bottom:10px' }, name, email, relation,
+    el('label', { for: 'idChecked', class: 'row', style: 'gap:4px;font-size:13px' }, checked, '신분을 확인했습니다'),
+    el('button', { type: 'submit', class: 'primary' }, '초대 링크 만들기'),
+    el('button', { type: 'button', onclick: showRegisterButton }, '취소'));
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      const r = await api(`/api/patients/${p.id}/guardians`, { method: 'POST',
+        body: { name: name.value.trim(), email: email.value.trim(), relation: relation.value, identityChecked: checked.checked } });
+      if (r.token) showInvite(`보호자 ${r.email}을(를) ${p.researchCode}에 연결했습니다.`, r);
+      else toast('이미 가입한 보호자 계정이라 초대 없이 연결했습니다.', true);
+      showRegisterButton();
+      await loadPatients();
+    } catch (err) { toast(err.message); }
+  });
+  box.replaceChildren(el('p', { class: 'muted', style: 'font-size:12px;margin:0 0 6px' },
+    `${p.researchCode}${p.displayName ? ' · ' + p.displayName : ''} 환자의 보호자를 초대합니다.`), form);
+  name.focus();
+}
+
+async function reinvite(userId, label) {
+  if (!confirm(`${label}에게 초대 링크를 다시 만듭니다.\n이전에 보낸 링크는 더 이상 쓸 수 없습니다.`)) return;
+  try {
+    const r = await api(`/api/patients/invitations/${userId}`, { method: 'POST' });
+    showInvite(`${r.email}의 초대 링크를 다시 만들었습니다.`, r);
+    await loadPatients();
+  } catch (err) { toast(err.message); }
+}
+
+/**
+ * 초대 링크 상자. 비밀값은 주소의 # 뒤(fragment)에 넣는다:
+ * # 뒤는 브라우저가 서버로 보내지 않아서, 링크를 여는 순간 서버 접속 기록에 비밀값이 남지 않는다.
+ */
+function showInvite(title, r) {
+  const link = `${location.origin}/invite.html#${r.token}`;
+  const box = document.getElementById('inviteResult');
+  box.replaceChildren(
+    el('b', {}, title),
+    el('div', { class: 'row', style: 'margin:8px 0' },
+      el('code', { class: 'temp-pw', style: 'font-size:12px;word-break:break-all' }, link),
+      el('button', { type: 'button', onclick: async () => {
+        try { await navigator.clipboard.writeText(link); toast('링크를 복사했습니다.', true); }
+        catch { toast('복사하지 못했습니다. 직접 복사해 주세요.'); }
+      }}, '복사')),
+    el('div', { class: 'muted', style: 'font-size:12px' },
+      '• 이 링크는 지금 한 번만 보입니다. 본인에게 안전하게 전달하세요.', el('br'),
+      `• ${new Date(r.expiresAt).toLocaleString('ko-KR')}까지, 한 번만 쓸 수 있습니다.`),
+    el('button', { type: 'button', style: 'margin-top:8px', onclick: () => { box.hidden = true; box.replaceChildren(); } }, '전달했어요 (닫기)'));
+  box.hidden = false;
 }
 
 async function enroll(id) {

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -29,7 +31,9 @@ public class LoginHistory {
         ACCOUNT_UNLOCKED,      // 관리자가 잠금 해제
         ACCOUNT_CREATED,       // 관리자가 계정 발급
         TEMP_PASSWORD_ISSUED,  // 관리자가 임시 비밀번호 재발급
-        PASSWORD_CHANGED       // 본인이 비밀번호 변경
+        PASSWORD_CHANGED,      // 본인이 비밀번호 변경
+        INVITATION_CREATED,    // 연구책임자가 환자·보호자 초대 (다시 초대 포함)
+        INVITATION_ACCEPTED    // 본인이 초대 링크로 비밀번호를 정함
     }
 
     public enum FailReason { BAD_CREDENTIALS, LOCKED, TEMP_EXPIRED }
@@ -41,11 +45,18 @@ public class LoginHistory {
     @Column(nullable = false)
     private LocalDateTime occurredAt;
 
+    /*
+     * @JdbcTypeCode(VARCHAR): Hibernate는 MySQL에서 enum을 MySQL 전용 enum('A','B') 타입으로 만든다.
+     * 그러면 Java에 새 종류(예: INVITATION_CREATED)를 추가해도 ddl-auto: update가 칸 정의를 바꾸지 않아 저장이 실패한다
+     * (11/20 R4에서 발견). 글자 칸(varchar)으로 두면 종류를 늘려도 DB를 고칠 필요가 없다.
+     */
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 30)
     private Event event;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(length = 20)
     private FailReason failReason;
 

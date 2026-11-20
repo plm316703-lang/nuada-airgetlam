@@ -48,6 +48,8 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
+                // 초대 링크로 가입: 아직 비밀번호가 없어 로그인할 수 없으므로 열어 둔다 (링크 비밀값이 출입증, R4)
+                .requestMatchers(HttpMethod.POST, "/api/invitations/preview", "/api/invitations/accept").permitAll()
                 // 판별기 연결은 로그인 대신 공유 API 키로 문지기가 확인 (ApiKeyHandshakeInterceptor)
                 .requestMatchers("/ws/classifier").permitAll()
                 .requestMatchers("/ws/dashboard").hasAnyRole(MONITOR_ROLES)
@@ -79,7 +81,9 @@ public class SecurityConfig {
         return (HttpServletRequest request) -> {
             String path = request.getRequestURI();
             if (!(path.startsWith("/api/") || path.equals("/ws/dashboard"))) return null;
-            if (path.equals("/api/auth/login") || path.equals("/api/auth/logout")) return null;
+            // 열어 둔 주소에서는 쿠키를 읽지 않는다: 만료된 쿠키가 남아 있으면 permitAll 주소도 401로 막히기 때문
+            if (path.equals("/api/auth/login") || path.equals("/api/auth/logout")
+                    || path.startsWith("/api/invitations/")) return null;
             Cookie[] cookies = request.getCookies();
             if (cookies == null) return null;
             for (Cookie c : cookies) {

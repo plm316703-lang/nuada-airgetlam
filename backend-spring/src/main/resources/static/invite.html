@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- 이 화면에서 다른 사이트로 이동해도 주소(비밀값 포함)를 넘기지 않게 -->
+  <meta name="referrer" content="no-referrer">
+  <title>Nuada Airgetlám — 초대 받기</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="login">
+  <form class="card" id="form" autocomplete="on" hidden>
+    <h1>초대 받기</h1>
+    <p id="intro"></p>
+
+    <input id="email" type="email" autocomplete="username" readonly aria-label="이메일(계정)">
+    <label for="next">사용할 비밀번호</label>
+    <input id="next" type="password" required minlength="10" autocomplete="new-password" aria-describedby="rules">
+    <label for="again">비밀번호 확인</label>
+    <input id="again" type="password" required autocomplete="new-password">
+
+    <ul id="rules" class="muted" style="font-size:12px;margin:10px 0 0;padding-left:18px">
+      <li>10자 이상 (긴 문장도 좋아요. 예: 띄어쓰기를 넣은 짧은 문장)</li>
+      <li>이메일 앞부분은 넣을 수 없어요</li>
+      <li>연구 참여 동의는 로그인한 뒤 내 화면에서 따로 결정해요</li>
+    </ul>
+
+    <button class="primary" type="submit">비밀번호 정하고 시작하기</button>
+    <div class="msg" id="msg" role="alert"></div>
+  </form>
+  <div class="card" id="bad" hidden>
+    <h1>초대 링크를 쓸 수 없어요</h1>
+    <p id="badText"></p>
+    <a href="/login.html">로그인 화면으로</a>
+  </div>
+</div>
+<script src="/js/common.js"></script>
+<script>
+  // 비밀값은 주소의 # 뒤에 있다 (# 뒤는 서버로 전송되지 않아 접속 기록에 남지 않음).
+  // 읽자마자 주소창에서 지워, 화면을 캡처하거나 어깨 너머로 보여도 링크가 새지 않게 한다
+  const token = decodeURIComponent(location.hash.slice(1));
+  history.replaceState(null, '', location.pathname);
+  const ROLE_KO = { PATIENT: '환자', GUARDIAN: '보호자' };
+
+  (async function () {
+    if (!token) return showBad('초대 링크가 올바르지 않습니다. 받은 링크 전체를 그대로 열어 주세요.');
+    try {
+      const p = await api('/api/invitations/preview', { method: 'POST', body: { token } });
+      document.getElementById('email').value = p.email;
+      document.getElementById('intro').textContent =
+        `${p.name}님, Nuada Airgetlám에 ${ROLE_KO[p.role] || ''} 계정이 준비되었어요. ` +
+        `본인만 아는 비밀번호를 정해 주세요. (${new Date(p.expiresAt).toLocaleString('ko-KR')}까지 유효)`;
+      document.getElementById('form').hidden = false;
+      document.getElementById('next').focus();
+    } catch (e) { showBad(e.message); }
+  })();
+
+  function showBad(text) {
+    document.getElementById('form').hidden = true;
+    document.getElementById('badText').textContent = text;
+    document.getElementById('bad').hidden = false;
+  }
+
+  document.getElementById('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('msg');
+    msg.textContent = '';
+    const password = document.getElementById('next').value;
+    if (password !== document.getElementById('again').value) { msg.textContent = '비밀번호와 확인이 서로 다릅니다.'; return; }
+    try {
+      const r = await api('/api/invitations/accept', { method: 'POST', body: { token, password } });
+      // 자동 로그인 대신 로그인 화면으로: 방금 정한 비밀번호를 한 번 더 입력해 보며 기억하게 하려는 것
+      location.href = `/login.html?joined=1#${encodeURIComponent(r.email)}`;
+    } catch (err) { msg.textContent = err.message; }
+  });
+</script>
+</body>
+</html>

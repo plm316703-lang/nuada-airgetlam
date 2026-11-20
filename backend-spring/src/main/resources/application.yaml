@@ -54,6 +54,7 @@ account:
   min-password-length: 10     # 새 비밀번호 최소 길이. 복잡한 조합보다 길이가 중요하다는 NIST 지침 참고 (사용자 결정)
   max-failed-logins: 5        # 비밀번호를 이 횟수만큼 연속으로 틀리면 잠금 (사용자 결정 11/20)
   lock-minutes: 15            # 잠금 시간. 지나면 자동 해제, 그 전에는 관리자가 풀 수 있음 (사용자 결정)
+  invite-hours: 72            # 환자·보호자 초대 링크 유효 시간, 1회용 (사용자 결정 11/20)
 
 rag:
   base-url: ${RAG_URL:http://localhost:8000}
