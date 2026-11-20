@@ -39,6 +39,7 @@ async function requireRole(allowed) {
   }
   const who = document.getElementById('who');
   if (who) who.textContent = `${me.name} · ${roleName(me.role)}`;
+  startIdleLogout(me.idleLogoutMinutes);
   const logout = document.getElementById('logout');
   if (logout) {
     logout.onclick = async () => { await api('/api/auth/logout', { method: 'POST' }); location.href = '/login.html'; };
@@ -48,6 +49,75 @@ async function requireRole(allowed) {
     }
   }
   return me;
+}
+
+// ==========================================================
+// 자동 로그아웃 (R3, 사용자 결정: 30분 무조작, 1분 전 경고, 관제 화면은 세션 중 제외)
+//  - 서버 증표 수명도 30분 → 화면을 우회하거나 PC를 꺼 둬도 서버 쪽에서 끝난다
+//  - 사람이 조작하면(최대 5분에 한 번) /api/auth/refresh 로 증표를 새로 받아 쓰는 동안은 끊기지 않게 한다
+//  - keepAlive(): 화면이 "지금은 조작이 없어도 로그인을 유지해야 한다"고 알려 주는 함수 (관제 화면이 세션 중일 때)
+// ==========================================================
+const IDLE = { minutes: 30, last: Date.now(), refreshedAt: 0, refreshEveryMs: 5 * 60 * 1000,
+               keepAlive: () => false, bar: null, started: false };
+
+function setIdleKeepAlive(fn) { IDLE.keepAlive = fn; }
+
+function startIdleLogout(minutes) {
+  if (IDLE.started || !minutes) return;
+  IDLE.started = true;
+  IDLE.minutes = minutes;
+  // 갱신 간격은 증표 수명의 1/3 이하로 (최대 5분): 고정 5분이면 수명을 2분으로 줄여 시험할 때
+  // 갱신 전에 증표가 먼저 끝나 버린다 (11/20 관제 화면 예외 확인 중 발견)
+  IDLE.refreshEveryMs = Math.min(5 * 60 * 1000, (minutes * 60 * 1000) / 3);
+  const touch = () => { IDLE.last = Date.now(); hideIdleWarning(); maybeRefresh(); };
+  // passive: 스크롤 성능을 해치지 않게. mousemove는 너무 잦아서 maybeRefresh 안에서 갱신 주기로 걸러진다
+  ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(ev =>
+    window.addEventListener(ev, touch, { passive: true }));
+  setInterval(checkIdle, 5000);
+  // 화면이 켜질 때 바로 한 번 갱신: 새로고침 직전에 받은 증표가 거의 끝나 가는 중일 수 있는데,
+  // 화면은 그 증표가 언제 발급됐는지 모르므로 "지금 새로 받은 것"에서 시작해야 계산이 맞는다
+  maybeRefresh();
+}
+
+async function maybeRefresh() {
+  if (Date.now() - IDLE.refreshedAt < IDLE.refreshEveryMs) return;
+  IDLE.refreshedAt = Date.now();
+  try { await api('/api/auth/refresh', { method: 'POST' }); }
+  catch { /* 증표가 이미 끝났으면 api()가 로그인 화면으로 보낸다 */ }
+}
+
+async function checkIdle() {
+  if (IDLE.keepAlive()) {   // 예외 화면: 조작이 없어도 쓰는 중으로 본다
+    IDLE.last = Date.now();
+    hideIdleWarning();
+    maybeRefresh();
+    return;
+  }
+  const idleMs = Date.now() - IDLE.last;
+  const limitMs = IDLE.minutes * 60 * 1000;
+  if (idleMs >= limitMs) {
+    try { await api('/api/auth/logout', { method: 'POST' }); } catch { /* 이미 끝났어도 로그인 화면으로 */ }
+    location.href = '/login.html?reason=idle';
+  } else if (idleMs >= limitMs - 60 * 1000) {
+    showIdleWarning(Math.ceil((limitMs - idleMs) / 1000));
+  }
+}
+
+function showIdleWarning(seconds) {
+  if (!IDLE.bar) {
+    IDLE.bar = el('div', { class: 'idle-warn', role: 'alertdialog', 'aria-live': 'assertive' },
+      el('span', { class: 'idle-text' }),
+      // 이 버튼을 누르는 것 자체가 click 조작이라 타이머가 초기화되고 증표도 갱신된다
+      el('button', { class: 'primary', type: 'button', onclick: () => { IDLE.refreshedAt = 0; } }, '계속 사용하기'));
+    document.body.append(IDLE.bar);
+  }
+  IDLE.bar.querySelector('.idle-text').textContent =
+    `${IDLE.minutes}분 동안 조작이 없어 약 ${seconds}초 뒤 자동으로 로그아웃됩니다.`;
+  IDLE.bar.style.display = 'flex';
+}
+
+function hideIdleWarning() {
+  if (IDLE.bar) IDLE.bar.style.display = 'none';
 }
 
 function roleName(role) {

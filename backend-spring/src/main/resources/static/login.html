@@ -31,6 +31,11 @@
     ['operator@nuada.test', '관제 담당자'], ['pi@nuada.test', '연구책임자'], ['researcher@nuada.test', '연구자'],
     ['patient@nuada.test', '환자'], ['guardian@nuada.test', '보호자'], ['admin@nuada.test', '관리자'],
   ];
+  // 자동 로그아웃으로 왔으면 이유를 알려 준다 (갑자기 로그인 화면이 떠서 놀라지 않게)
+  if (new URLSearchParams(location.search).get('reason') === 'idle') {
+    document.getElementById('msg').textContent = '오랫동안 조작이 없어 안전을 위해 로그아웃되었습니다. 다시 로그인해 주세요.';
+  }
+
   const chips = document.getElementById('chips');
   demo.forEach(([email, label]) => chips.append(el('button', {
     type: 'button', onclick: () => { document.getElementById('email').value = email; document.getElementById('password').focus(); },

@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 
@@ -68,6 +69,14 @@ public class User {
     /** 임시 비밀번호 만료 시각. 이 시각까지 바꾸지 않으면 임시 비밀번호로는 로그인할 수 없다 (재발급 필요) */
     private LocalDateTime tempPasswordExpiresAt;
 
+    /** 연속 로그인 실패 횟수. 성공하면 0. 기존 계정은 0으로 채워진다 */
+    @ColumnDefault("0")
+    @Column(nullable = false)
+    private int failedLoginCount;
+
+    /** 이 시각까지 잠김 (null 또는 지난 시각이면 잠기지 않음). 시각으로 두면 "15분 뒤 자동 해제"를 따로 처리할 필요가 없다 */
+    private LocalDateTime lockedUntil;
+
     /**
      * 회원 생성용 생성자.
      * setter를 열어두는 대신 생성자로만 값을 넣게 해서,
@@ -97,5 +106,37 @@ public class User {
     /** 임시 비밀번호가 만료됐는가 (임시 상태가 아니면 항상 false) */
     public boolean isTempPasswordExpired(LocalDateTime now) {
         return mustChangePassword && tempPasswordExpiresAt != null && now.isAfter(tempPasswordExpiresAt);
+    }
+
+    // ───────── 로그인 실패 잠금 (R3) ─────────
+
+    public boolean isLocked(LocalDateTime now) {
+        return lockedUntil != null && now.isBefore(lockedUntil);
+    }
+
+    /**
+     * 비밀번호 틀림 1회. 횟수가 기준에 닿으면 잠그고 true(= "지금 막 잠겼다").
+     * 잠근 뒤 횟수를 0으로 되돌린다: 잠금이 풀린 뒤에는 다시 5번의 기회를 준다.
+     */
+    public boolean recordLoginFailure(LocalDateTime now, int maxFailures, Duration lockFor) {
+        failedLoginCount++;
+        if (failedLoginCount >= maxFailures) {
+            lockedUntil = now.plus(lockFor);
+            failedLoginCount = 0;
+            return true;
+        }
+        return false;
+    }
+
+    /** 로그인 성공 → 실패 횟수와 지난 잠금 흔적을 지움 */
+    public void recordLoginSuccess() {
+        failedLoginCount = 0;
+        lockedUntil = null;
+    }
+
+    /** 관리자 잠금 해제 (또는 임시 비밀번호 재발급 때 함께 해제) */
+    public void unlock() {
+        failedLoginCount = 0;
+        lockedUntil = null;
     }
 }

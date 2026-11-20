@@ -155,6 +155,11 @@ tr.new { animation: flash 1.2s ease-out; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
 .chips button { padding: 3px 9px; font-size: 12px; }
 
+/* ---------- 자동 로그아웃 경고 (화면 위 가운데, 다른 요소에 가려지지 않게) ---------- */
+.idle-warn { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none;
+  align-items: center; gap: 12px; flex-wrap: wrap; max-width: calc(100vw - 32px); padding: 10px 14px;
+  background: #241d0f; border: 1px solid var(--warn); border-radius: var(--radius); box-shadow: 0 6px 24px #0008; }
+
 /* ---------- 알림 ---------- */
 .toast { position: fixed; right: 16px; bottom: 16px; max-width: min(420px, calc(100vw - 32px)); padding: 10px 14px;
   border-radius: 8px; background: #2a1215; border: 1px solid var(--bad); color: #ffd7d5; display: none; z-index: 20; }

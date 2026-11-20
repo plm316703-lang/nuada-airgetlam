@@ -28,6 +28,9 @@ const CONTROL_KO = {
 
 (async function init() {
   me = await requireRole(['OPERATOR', 'PRINCIPAL_INVESTIGATOR', 'RESEARCHER']);
+  // 자동 로그아웃 예외 (사용자 결정): 측정 세션이 진행 중이면 조작이 없어도 로그인을 유지한다.
+  // 팔이 움직이는 동안 관제 담당자가 로그아웃되면 정지·오류 경보를 못 볼 수 있기 때문
+  setIdleKeepAlive(() => Boolean(arm && arm.sessionId !== null && arm.sessionId !== undefined));
   const canControl = CONTROL_ROLES.includes(me.role);
   document.querySelectorAll('.control').forEach(b => { if (!canControl) b.style.display = 'none'; });
 
