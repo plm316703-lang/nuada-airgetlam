@@ -12,7 +12,7 @@
 - 이 프로젝트는 **"Claude Code로 프로젝트가 어떻게 만들어지는지" 보는 첫 실험**이다. (2026-11-20 결정)
   - 국비 과정의 협업 프로젝트에서 나와 혼자 진행. **발표 없음**. 처음엔 11/22까지였으나 **11/20에 기한 해제** (계획한 기능을 다 하기로)
   - 결과물보다 **실험 기록**(AI가 잘한 것 / 틀린 것·내가 잡은 것 / 내가 결정한 것)이 중요
-  - 면접관 공개·GitHub 공개 여부는 미정 → 언제든 공개할 수 있는 상태로 유지
+  - GitHub 저장소는 **Public** (11/20 확인, 공개 유지 결정). README 맨 위에 AI 활용 실험임을 밝힘
   - 다음 주(11/23~)에는 별도로 앱을 만들 예정
 
 ## 2. Claude에게 부탁하는 진행 방식 (가장 중요)
@@ -149,7 +149,7 @@ nuada-airgetlam/
   - 설정: `app.demo.injection-enabled` (`DEMO_INJECTION_ENABLED`, 기본 true), 규격: `docs/message-spec.md` 6장
 - 👉 **지금: 회고** (브랜치 `docs/retrospective`) — `docs/retrospective.md` 초안 작성, README 맨 위에 AI 활용 실험 안내. 공개 결정: **GitHub 공개**
   - 공개 전 점검: `backend-spring.zip`(커밋 58dae63, 옛 로컬 DB 설정·비밀번호 포함) 삭제 + `.gitignore`에 `*.zip`·`application-local.yaml` 추가.
-    기록은 다시 쓰지 않고 **옛 비밀번호를 바꾸기로 결정** (내가 직접, 남은 일)
+    저장소는 **이미 Public**이었고 zip의 비밀번호는 MySQL **root** 것 → root 비밀번호 변경 완료 (11/20)
 - 나중에: Q-B2g 전체 실행 스크립트(`scripts/run-all.ps1`), C1 주파수 화면, C2 LSL, RAG LangChain 재구현(직접 작성)
 - 밀린 일: `docs/portfolio-log.md`의 PR #19·#20·#21 항목에서 `(보완 필요)` 칸을 내가 채우기 (#22는 작성 완료)
 

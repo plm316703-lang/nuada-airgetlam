@@ -97,11 +97,14 @@
 **공개 전 정리**
 - [x] 저장소에 올라가 있던 `backend-spring.zip` 삭제 (안에 옛 로컬 DB 설정·비밀번호가 들어 있었음, 커밋 58dae63).
       Git 기록에는 남으므로 기록을 다시 쓰는 대신 **비밀번호를 바꾸는 방법**을 택함 (11/20 내 결정). `.gitignore`에 `*.zip`, `application-local.yaml` 추가
-- [ ] zip에 들어 있던 옛 DB 비밀번호를 아직 쓰는 곳이 있으면 변경 (내가 직접)
+- [x] **확인해 보니 저장소는 이미 Public이었고**, zip의 비밀번호는 이 PC MySQL의 **root** 비밀번호였다
+      (MySQL은 모든 네트워크 주소에서 접속을 받는 설정). → root 비밀번호 변경 완료 (11/20, 내가 직접)
+  - 교훈: "공개 여부는 미정"이라고 생각하고 있었지만 실제로는 처음부터 공개였다. **내가 안다고 생각한 상태도 직접 확인**해야 한다
+    (R3의 시간 줄여 시험하기, R4의 DB 칸 조회와 같은 교훈)
 - [ ] (선택) GitHub "Keep my email addresses private"로 앞으로의 커밋 작성자 이메일 가리기
 - [ ] README 정리: 맨 위에 AI 활용 실험 안내 (이번 PR), 오래된 소개 문장(집중·피로 지표 등) 갱신 여부 결정
 - [ ] `docs/portfolio-log.md`의 PR #19~#21 `(보완 필요)` 칸 채우기
-- [ ] GitHub 저장소를 Public으로 바꾸기 (내가 직접)
+- [x] ~~GitHub 저장소를 Public으로 바꾸기~~ → 이미 Public이었음
 
 **기능 (다음 주 이후)**
 - 전체 실행 스크립트(`scripts/run-all.ps1`) 또는 Docker Compose 리허설
