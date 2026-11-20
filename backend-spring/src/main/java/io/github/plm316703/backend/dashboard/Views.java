@@ -13,6 +13,8 @@ import io.github.plm316703.backend.session.SourceType;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * 화면으로 내보내는 데이터 모양(DTO) 모음.
@@ -34,15 +36,34 @@ public final class Views {
         }
     }
 
+    /**
+     * badChannels: DB에는 "C3,Cz,C4" 글자로 저장하지만 화면에는 목록으로 보낸다.
+     * 화면 JS가 쉼표로 쪼갤 필요 없이 바로 채널 지도에 칠할 수 있게 하기 위해서다.
+     * 실시간 전송과 "최근 판단 50개" 불러오기가 모두 of()를 거치므로, 새로고침 직후에도 지도가 채워진다.
+     */
     public record DecisionView(Long id, Long sessionId, Long seq, LocalDateTime receivedAt, String intent,
                                Double confidence, Double signalQuality, String signalIssue,
+                               List<String> badChannels,
                                String pythonDecision, GateResult result, RejectReason reason, String detail,
                                Double armAngleAfter, String trueLabel, String scenario) {
         public static DecisionView of(GateDecision d) {
             return new DecisionView(d.getId(), d.getSessionId(), d.getSeq(), d.getReceivedAt(), d.getIntent(),
-                    d.getConfidence(), d.getSignalQuality(), d.getSignalIssue(), d.getPythonDecision(),
-                    d.getResult(), d.getReason(), d.getDetail(), d.getArmAngleAfter(), d.getTrueLabel(),
-                    d.getScenario());
+                    d.getConfidence(), d.getSignalQuality(), d.getSignalIssue(), splitChannels(d.getBadChannels()),
+                    d.getPythonDecision(), d.getResult(), d.getReason(), d.getDetail(), d.getArmAngleAfter(),
+                    d.getTrueLabel(), d.getScenario());
+        }
+
+        /**
+         * 문제 채널이 없으면 null 대신 빈 목록을 보낸다.
+         * 화면에서 null 검사 없이 "목록에 있으면 빨강, 없으면 초록"으로만 칠하면 되게 하려는 것이다.
+         * 쉼표 사이 공백이나 빈 칸은 걸러 낸다 (200자 자르기로 마지막 이름이 잘렸을 때 등).
+         */
+        private static List<String> splitChannels(String joined) {
+            if (joined == null || joined.isBlank()) return List.of();
+            return Arrays.stream(joined.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList();
         }
     }
 

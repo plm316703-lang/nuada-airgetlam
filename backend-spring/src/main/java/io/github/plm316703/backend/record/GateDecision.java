@@ -68,7 +68,7 @@ public class GateDecision {
     @Builder
     private GateDecision(Long sessionId, String wsConnectionId, Integer subject,
                          Long seq, String commandTimestamp, String intent,
-                         Double confidence, Double signalQuality, String signalIssue, String badChannels,   // ← badChannels 추가
+                         Double confidence, Double signalQuality, String signalIssue, String badChannels,
                          String pythonDecision, GateResult result, RejectReason reason,
                          String detail, Double armAngleAfter, String trueLabel, String scenario) {
         this.sessionId = sessionId;
