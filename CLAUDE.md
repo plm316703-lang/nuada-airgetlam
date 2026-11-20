@@ -151,7 +151,7 @@ nuada-airgetlam/
   - 공개 전 점검: `backend-spring.zip`(커밋 58dae63, 옛 로컬 DB 설정·비밀번호 포함) 삭제 + `.gitignore`에 `*.zip`·`application-local.yaml` 추가.
     저장소는 **이미 Public**이었고 zip의 비밀번호는 MySQL **root** 것 → root 비밀번호 변경 완료 (11/20)
 - 나중에: Q-B2g 전체 실행 스크립트(`scripts/run-all.ps1`), C1 주파수 화면, C2 LSL, RAG LangChain 재구현(직접 작성)
-- 밀린 일: `docs/portfolio-log.md`의 PR #19·#20·#21 항목에서 `(보완 필요)` 칸을 내가 채우기 (#22는 작성 완료)
+- ✅ `docs/portfolio-log.md`의 PR #19·#20·#21 빈칸을 당시 PR 본문 근거로 채움 (11/20). R2·R4·B2의 "확인 중 이상한 점" 칸은 기억나면 내가 보완
 
 ## 8. 작업 규칙
 

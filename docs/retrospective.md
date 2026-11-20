@@ -103,7 +103,7 @@
     (R3의 시간 줄여 시험하기, R4의 DB 칸 조회와 같은 교훈)
 - [ ] (선택) GitHub "Keep my email addresses private"로 앞으로의 커밋 작성자 이메일 가리기
 - [ ] README 정리: 맨 위에 AI 활용 실험 안내 (이번 PR), 오래된 소개 문장(집중·피로 지표 등) 갱신 여부 결정
-- [ ] `docs/portfolio-log.md`의 PR #19~#21 `(보완 필요)` 칸 채우기
+- [x] `docs/portfolio-log.md`의 PR #19~#21 `(보완 필요)` 칸 채우기 (당시 PR 본문 근거, 11/20)
 - [x] ~~GitHub 저장소를 Public으로 바꾸기~~ → 이미 Public이었음
 
 **기능 (다음 주 이후)**
