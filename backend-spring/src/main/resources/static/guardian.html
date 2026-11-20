@@ -11,38 +11,54 @@
   <div class="brand"><b>Nuada Airgetlám</b><span>보호자 화면</span></div>
   <div class="who"><span id="who"></span><button id="logout" type="button">로그아웃</button></div>
 </header>
-<main>
+<main class="grid">
   <section class="panel">
-    <h2>연결된 환자 <small>보기 전용 · 대리 동의는 발표 이후 기능</small></h2>
+    <h2>연결된 환자 <small>보기 전용 · 동의·철회는 환자 본인만 할 수 있어요</small></h2>
     <div id="list" class="grid two"></div>
   </section>
 </main>
 <script src="/js/common.js"></script>
 <script>
   const RELATION = { FAMILY: '가족', CAREGIVER: '간병인', OTHER: '기타' };
+  const SHOW_STOPS = 5;   // 카드가 너무 길어지지 않게 최근 5건만 보여 주고 나머지는 개수만
+
   (async function () {
     await requireRole(['GUARDIAN']);
     await refresh();
     setInterval(() => refresh().catch(() => {}), 2000);
   })();
 
+  const hhmm = (iso) => new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+
   async function refresh() {
     const list = await api('/api/me/guardian/patients');
     const box = document.getElementById('list');
     if (!list.length) { box.replaceChildren(el('p', { class: 'muted' }, '연결된 환자가 없습니다.')); return; }
-    box.replaceChildren(...list.map(p => {
-      const canvas = el('canvas', { class: 'arm', 'aria-label': `${p.name} 로봇팔` });
-      const card = el('div', { class: 'panel' },
-        el('h2', {}, `${p.name} `, el('small', {}, `${p.researchCode} · ${RELATION[p.relation] || p.relation}`)),
-        canvas,
-        el('dl', { class: 'kv', style: 'margin-top:10px' },
-          el('dt', {}, '연구 참여'), el('dd', {}, p.participating ? '참여 중' : '참여 중 아님'),
-          el('dt', {}, '로봇팔'), el('dd', {}, p.arm ? `${stateName(p.arm.state)} · ${Number(p.arm.angle).toFixed(0)}°` : '세션 없음'),
-          p.arm && p.arm.stopReason ? el('dt', {}, '정지 사유') : null,
-          p.arm && p.arm.stopReason ? el('dd', {}, p.arm.stopReason) : null));
-      requestAnimationFrame(() => drawArm(canvas, p.arm ? p.arm.angle : 90, p.arm ? p.arm.state : 'IDLE'));
-      return card;
-    }));
+    box.replaceChildren(...list.map(card));
+  }
+
+  function card(p) {
+    const state = p.arm ? p.arm.state : 'IDLE';
+    const canvas = el('canvas', { class: 'arm', 'aria-label': `${p.name} 로봇팔` });
+    const stops = p.todayStops || [];
+    const shown = stops.slice(0, SHOW_STOPS);
+
+    const node = el('div', { class: 'panel' },
+      el('h2', {}, `${p.name} `, el('small', {}, `${p.researchCode} · ${RELATION[p.relation] || p.relation}`)),
+      // 문장은 서버가 쉬운 말로 만들어 보낸다 (관제용 기술 문구는 보호자에게 보내지 않음)
+      el('div', { class: `now now-${state}` }, p.arm ? p.arm.message : '지금은 측정 세션이 없어요.'),
+      el('div', { style: 'margin-top:12px' }, canvas),
+      el('dl', { class: 'kv', style: 'margin-top:10px' },
+        el('dt', {}, '연구 참여'), el('dd', {}, p.participating ? '참여 중' : '참여 중 아님'),
+        el('dt', {}, '로봇팔'), el('dd', {}, p.arm ? `${stateName(state)} · ${Number(p.arm.angle).toFixed(0)}°` : '세션 없음')),
+      el('h2', { style: 'margin-top:14px' }, '오늘 멈춘 기록', el('small', {}, stops.length ? `${stops.length}번` : '')),
+      el('ul', { class: 'stops' }, ...(shown.length
+        ? shown.map(x => el('li', {}, el('time', {}, hhmm(x.at)), el('span', {}, x.reason)))
+        : [el('li', { class: 'muted' }, '오늘은 멈춘 적이 없어요.')])),
+      stops.length > SHOW_STOPS ? el('p', { class: 'muted', style: 'font-size:12px;margin:6px 0 0' }, `이전 기록 ${stops.length - SHOW_STOPS}건 더 있음`) : null);
+
+    requestAnimationFrame(() => drawArm(canvas, p.arm ? p.arm.angle : 90, state));
+    return node;
   }
 </script>
 </body>
