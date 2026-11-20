@@ -141,15 +141,16 @@ nuada-airgetlam/
   - 설정: `account.invite-hours` 72
   - ⚠ 발견: Hibernate가 MySQL에서 enum을 `enum('A','B')` 칸으로 만든다 → 새 값을 추가하면 저장 실패 위험.
     `@JdbcTypeCode(SqlTypes.VARCHAR)`를 붙이면 서버 시작 때 varchar로 바뀜(확인함). **B2에서 `control_events.type`에 값을 추가할 때도 같은 처리 필요**
-- ✅ **B2 오류 주입 버튼** (브랜치 `feature/injection-button`) — 11/20 실행 확인, 커밋·PR 전
+- ✅ **B2 오류 주입 버튼** (PR #27 머지)
   - Spring: `gateway/ReplayerCommander`(열린 판별기 연결에 명령 전송), `arm/InjectionService`(시연 모드 검사·INJECT 기록),
     `DashboardController`(POST /api/dashboard/inject, 설정에 injectionKinds), `ControlEvent.Type.INJECT`(칸 varchar로 바뀐 것 확인)
   - 재생기: `replayer.py`의 `command_loop`(받기 스레드, 키보드와 같은 injector 사용)
   - 화면: 로봇팔 패널에 버튼 7개 (조작 역할 + 시연 모드일 때만, 12초 끊김만 확인 창)
   - 설정: `app.demo.injection-enabled` (`DEMO_INJECTION_ENABLED`, 기본 true), 규격: `docs/message-spec.md` 6장
-- 👉 **지금: 회고** (`docs/retrospective.md`) — 내 소감 질문 중
+- 👉 **지금: 회고** (브랜치 `docs/retrospective`) — `docs/retrospective.md` 초안 작성, README 맨 위에 AI 활용 실험 안내. 공개 결정: **GitHub 공개**
+  - 공개 전 점검: `backend-spring.zip`(커밋 58dae63, 옛 로컬 DB 설정·비밀번호 포함) 삭제 + `.gitignore`에 `*.zip`·`application-local.yaml` 추가.
+    기록은 다시 쓰지 않고 **옛 비밀번호를 바꾸기로 결정** (내가 직접, 남은 일)
 - 나중에: Q-B2g 전체 실행 스크립트(`scripts/run-all.ps1`), C1 주파수 화면, C2 LSL, RAG LangChain 재구현(직접 작성)
-- 그다음: R4 초대 → B2 오류 주입 버튼 → 회고 (상세: `docs/roadmap.md`)
 - 밀린 일: `docs/portfolio-log.md`의 PR #19·#20·#21 항목에서 `(보완 필요)` 칸을 내가 채우기 (#22는 작성 완료)
 
 ## 8. 작업 규칙
