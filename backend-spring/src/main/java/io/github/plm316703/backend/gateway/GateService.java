@@ -15,6 +15,7 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -206,9 +207,22 @@ public class GateService {
             b.seq(m.seq()).subject(m.subject()).commandTimestamp(m.timestamp()).intent(m.intent()).confidence(m.confidence())
                     .pythonDecision(m.decision()).trueLabel(m.trueLabel()).scenario(m.scenario());
             if (m.signal() != null) {
-                b.signalQuality(m.signal().quality()).signalIssue(m.signal().issue());
+                b.signalQuality(m.signal().quality()).signalIssue(m.signal().issue())
+                        .badChannels(joinChannels(m.signal().badChannels()));
+
             }
+
         }
         return b.build();
+    }
+    /**
+     * 채널 목록을 DB 칸 하나에 넣을 글자로 바꾼다. 예: ["C3","Cz","C4"] → "C3,Cz,C4"
+     * - 목록이 없거나 비어 있으면 null (정상 메시지는 문제 채널이 없음)
+     * - 200자를 넘으면 자름: 규격을 어긴 메시지가 엄청 긴 목록을 보내도 저장이 실패하지 않게
+     */
+    private static String joinChannels(List<String> channels) {
+        if (channels == null || channels.isEmpty()) return null;
+        String joined = String.join(",", channels);
+        return joined.length() <= 200 ? joined : joined.substring(0, 200);
     }
 }
