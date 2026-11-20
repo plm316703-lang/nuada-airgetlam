@@ -1,151 +1,48 @@
-# 다음 세션 시작 안내 (Claude Code용)
+# 이 저장소로 돌아왔을 때 (인수인계)
 
-> 작성: 2026-11-20 (금) 오전, claude.ai 대화에서 Claude Code로 넘기기 위해 작성
-> ~~발표: 2026-11-27 (금)~~ → **11/20 결정: 발표 없음. 11/22(일)까지 "Claude 활용 첫 실험"으로 마무리** (5장 참고)
-> 작업 PC: 학원 PC (Windows, `D:\nuada-airgetlam`, IntelliJ, conda `nuada-bci`)
-
----
-
-## 0. Claude Code가 이 파일을 읽은 뒤 할 일 (순서대로)
-
-1. `CLAUDE.md` → `docs/roadmap.md` → 이 파일 순서로 읽는다.
-2. 저장소 상태를 확인한다: 현재 브랜치가 `feature/channel-map`인지, 작업 트리가 깨끗한지, `origin`과 같은지.
-3. **코드를 건드리기 전에 4장 "방향 재점검 질문"을 사용자에게 먼저 묻는다.**
-   - 한 번에 다 묻지 말고 **2~3개씩** 나눠 묻는다 (사용자는 한꺼번에 받으면 막힌다).
-   - 답을 받으면 `docs/roadmap.md`의 "결정 사항"과 이 파일 5장에 기록한다.
-4. 방향이 정해지면 2장의 **B1-2b 실행 확인**부터 시작한다.
-5. 이후 각 작업은 3장의 "결정 질문"을 먼저 묻고 → 계획 설명 → 구현 → 사용자가 실행 확인 → 다음 단계 순서로 진행한다.
+> 마지막 갱신: 2026-11-20 — "Claude Code 활용 첫 실험"을 마무리한 시점
+> 여러 PC(학원·집)에서 이어서 작업하므로, 세션을 시작하면 이 파일을 먼저 읽는다.
 
 ---
 
-## 1. 지금까지 한 일 (요약)
+## 0. 세션을 시작하면 (Claude Code가 할 일, 순서대로)
 
-| PR | 내용 | 날짜 |
+1. `CLAUDE.md` → 이 파일 → `docs/roadmap.md` 순서로 읽는다.
+2. 저장소 상태를 확인한다: 지금 브랜치, 작업 트리가 깨끗한지, `origin/main`과 같은지.
+   **문서에 적힌 상태도 실제로 조회해서 확인한다** (11/20 교훈: "공개 여부 미정"이라고 적혀 있었지만 실제로는 이미 Public이었다).
+3. 아래 "2. 다음에 할 일" 중 무엇을 할지 사용자에게 묻는다. 결정 질문은 2~3개씩.
+4. 진행 방식은 `CLAUDE.md` 2장 그대로: 계획 → 구현 → 사용자가 실행 확인 → 다음 단계. 커밋·PR은 요청할 때만.
+5. **되돌리기 어려운 동작(머지, 원격 브랜치 삭제 등)은 앞 단계의 성공을 확인한 뒤 따로 실행한다** (PR #30 교훈).
+
+---
+
+## 1. 지금 상태 (11/20 마무리 시점)
+
+- **실험 1차 완료.** 하루 동안 PR #22~#30을 머지했다. 결과·소감은 `docs/retrospective.md`, 작업별 기록은 `docs/portfolio-log.md`.
+- 만든 기능: B1 채널 상태 지도, R1 역할 화면, R2 계정 발급, R3 로그인 보안, R4 초대, B2 오류 주입 버튼 (자세한 목록은 `CLAUDE.md` 7장)
+- 저장소: **GitHub Public**, README 맨 위에 "Claude Code 활용 실험" 안내.
+  커밋 이메일은 GitHub noreply 주소 (`git config --local user.email`, **다른 PC에서도 한 번 설정 필요**)
+- DB: 테이블 10개 (`CLAUDE.md` 5장). Hibernate가 MySQL에서 enum을 `enum(...)` 칸으로 만들므로,
+  **enum에 새 값을 넣을 땐 `@JdbcTypeCode(SqlTypes.VARCHAR)`** (LoginHistory·ControlEvent 참고)
+- 실행: 지금은 로컬 실행(Anaconda Prompt에서 RAG·재생기 + IntelliJ Spring). Docker Compose 설정은 있지만 **끝까지 실행해 본 적 없음**
+
+---
+
+## 2. 다음에 할 일
+
+| 순서 | 할 일 | 메모 |
 |---|---|---|
-| #14 | 판별기 → 관문 → 로봇팔 → 차단 기록 → RAG → 관제 화면 통합 | 11/18 |
-| #16 | 미커밋 옛 작업 병합: 판단 기록에 `ws_connection_id`, `subject` 저장 | 11/19 |
-| #17·#18 | portfolio-log 기록, 변경 표시 주석 정리 | 11/19 |
-| #19 | **A1** Chart.js를 `static/js/vendor/`에 포함 (CDN 의존 제거) | 11/19 |
-| #20 | **A2** RAG Gemini 호출 25초 제한 + 생성 실패 시에도 찾은 근거 반환 | 11/19 |
-| #21 | **A3** RAG 매뉴얼 8개 출처 추가 + 답변 규칙 보강 (수치·출처 유지, `특징:` 줄) | 11/19 |
+| 1 | **Docker 전체 실행 확인** | `docker-compose.yml` 정비(시연 모드·증표 시간 설정 전달, `docker attach` 안내를 버튼 안내로), 첫 빌드, 로그인·주입 버튼까지 확인. IntelliJ Spring을 끄고 해야 8080이 안 겹침. Docker DB(3307)는 로컬 MySQL과 별개 |
+| 2 | (선택) 전체 실행 스크립트 `scripts/run-all.ps1` | 로컬 개발용. Q-B2g에서 나중으로 미룸 |
+| 3 | C1 주파수 화면 / C2 LSL 입력 | 원래 로드맵 (`docs/roadmap.md`) |
+| 4 | RAG를 LangChain으로 다시 구현해 비교 | **내가 직접 작성, Claude는 리뷰만** — 회고 8장 "블랙박스" 대응 |
+| — | (선택) R2·R4·B2 portfolio-log의 "확인 중 이상한 점" 칸 | 기억나면 직접 보완 |
 
-- 로컬 설정: `.env` 하나로 통일 (`application-local.yaml`은 저장소 밖으로 옮김), MySQL `nuada` 계정 사용
-- 리허설: 오류 주입 7종(e n m x s d r) 모두 정상 동작 확인 (11/19)
-- RAG 모델: `.env`의 `GEMINI_MODEL=gemini-3.1-flash-lite` (기본값 `gemini-3.8-flash`는 11/19 극도로 느렸음)
+다음 주(11/23~)에는 별도 앱을 만들 예정. 그 앱에서는 처음부터 "블랙박스로 둘 부분과 직접 볼 부분"을 정하고 시작하기 (회고 8장 4번).
 
 ---
 
-## 2. 지금 상태: B1 채널 상태 지도 (브랜치 `feature/channel-map`)
-
-### 2-1. 이미 한 것 (커밋 `96a7826`, push 완료)
-- `record/GateDecision.java`: `badChannels` 필드 (String, `@Column(length = 200)`, null 허용) + `@Builder` 매개변수
-- `gateway/GateService.java`: `joinChannels(List<String>)` 도우미 (목록 → `"C3,Cz,C4"`, 비면 null, 200자 자르기),
-  `decisionOf()`의 `if (m.signal() != null)` 안에서 `.badChannels(joinChannels(m.signal().badChannels()))`
-
-### 2-2. ✅ 실행 확인 완료 (11/20, 사용자 확인: 정상 작동)
-1. Spring 실행 (IntelliJ `BackendApplication` ▶) → `Started BackendApplication` 확인
-2. DBeaver에서 `DESC nuada.gate_decisions;` → `bad_channels varchar(200)`, Null = YES 확인
-3. 재생기 실행 후 `e` 주입 → `SELECT id, seq, result, signal_issue, bad_channels FROM nuada.gate_decisions ORDER BY id DESC LIMIT 10;`
-   → 차단된 행에 `C3,Cz,C4` 류의 값, 정상 행은 NULL이면 성공
-
-### 2-3. 데이터 흐름 (B1의 핵심)
-```
-[재생기] realtime/signal_quality.py assess() → {"quality", "issue", "bad_channels": ["C3","Cz","C4"]}
-   ↓ /ws/classifier
-[Spring] ClassifierMessage.signal().badChannels()
-   ↓ GateService.decisionOf()
-   GateDecision.badChannels = "C3,Cz,C4"   ← B1-2b (완료, 확인 전)
-   ↓ DashboardHub.broadcast("decision", Views.DecisionView.of(saved))
-   DecisionView.badChannels                ← B1-2c (다음)
-   ↓ 관제 화면 WebSocket (dashboard.js ws.onmessage)
-[화면] 채널 지도 패널                        ← B1-3
-```
-- 채널 22개와 순서: `ai-server-python/realtime/signal_quality.py`의 `CHANNELS` (BCI Competition IV 2a 몽타주)
-- 운동 영역 채널: `MOTOR_CHANNELS = {"C3", "Cz", "C4"}` (이 채널이 나쁘면 품질 점수가 더 깎임)
-- 전극 불량 주입(`e`)은 C3·C4 평탄 + Cz 출렁임을 만든다
-
----
-
-## 3. 남은 작업: 구현 계획과 "먼저 물어볼 결정 질문"
-
-### B1-2c. `DecisionView`에 문제 채널 추가
-- 계획: `dashboard/Views.java`의 `DecisionView` 레코드에 칸 추가, `of()`에서 DB 글자를 화면용으로 변환
-- **결정 질문**
-  - Q-B1a. 화면으로 보낼 때 **목록**(`["C3","Cz","C4"]`)으로 보낼까, **글자**(`"C3,Cz,C4"`) 그대로 보낼까?
-    (Claude 추천: 목록. 화면 JS가 쪼갤 필요가 없음)
-  - Q-B1b. 관제 화면을 처음 열 때 불러오는 "최근 판단 50개"에도 채널 정보를 넣어서, 새로고침 직후에도 지도가 채워지게 할까?
-
-### B1-3. 그래프 옆 새 패널에 22채널 머리 지도
-- 현재 화면: `dashboard.html`의 그래프 `<section class="panel">`(58번째 줄 근처)이 **가로 전체**를 차지함
-  → "그래프 | 채널 지도" 두 칸(`grid two`)으로 나눠야 함
-- 계획: 22채널 2D 좌표를 JS 상수로 두고, 판단 메시지가 올 때마다 색을 바꿈
-- **결정 질문**
-  - Q-B1c. 그래프 폭이 절반 정도로 줄어도 괜찮은가? 아니면 지도를 작게 해서 그래프를 더 넓게?
-  - Q-B1d. 그리는 방식: **SVG**(점 하나하나가 요소라 마우스 올리면 채널 이름 보이기 쉬움, Claude 추천) vs **canvas**(로봇팔과 같은 방식)
-  - Q-B1e. 색 규칙 제안: 정상 초록 / 문제 빨강 / 아직 데이터 없음 회색 / C3·Cz·C4는 굵은 테두리로 강조. 이대로 괜찮은가?
-  - Q-B1f. 무엇을 기준으로 칠할까? **마지막 메시지 1개**(즉시 반응, 깜빡일 수 있음) vs **최근 몇 초 누적**(안정적, 회복이 늦게 보임)
-  - Q-B1g. 지도 옆이나 아래에 신호 품질 점수와 원인(`ELECTRODE_CONTACT` 등)도 글자로 같이 보일까?
-  - Q-B1h. 22채널 좌표를 정확한 10-20 배치로 할까, 보기 좋은 근사 배치로 할까? (발표용이면 근사로 충분, 출처는 BCI IV 2a 데이터셋 설명서의 전극 배치 그림)
-
-### B1-4. 확인 → B1 마무리
-- 재생기 `e` 주입 → C3·Cz·C4가 빨강, 주입이 끝나면 초록으로 돌아오는지
-- `n`, `m`(채널 전체 잡음)일 때 지도가 어떻게 보이는지도 확인 (문제 채널 목록이 비어 있을 수 있음 → 그때 지도 표현을 어떻게 할지 결정 필요)
-- 커밋 → PR → 머지 → `docs/portfolio-log.md` 기록 → `docs/roadmap.md` 상태 갱신
-
-### B2. 관제 화면의 오류 주입 버튼 (마커형)
-- 현재 구조
-  - 재생기 `replayer.py`는 **키보드(stdin)로만** 주입 명령을 받음: `keyboard_loop()` → `injector.trigger(kind)`
-  - 재생기 → Spring WebSocket(`/ws/classifier`)은 **보내기만** 함. Spring → 재생기 방향 통로가 없음
-  - Docker에서는 `docker attach`로 키를 쳐야 해서 발표 중 불편
-- 통로 선택지 (**결정 질문 Q-B2a**)
-  - (가) 같은 `/ws/classifier` 연결로 Spring이 명령 메시지를 내려보내고, 재생기에 수신 스레드 추가
-    → 이미 API 키로 인증된 연결을 재사용, Docker 설정 변경 없음 (Claude 추천)
-  - (나) 재생기에 작은 HTTP 서버를 띄우고 Spring이 호출 → 포트·Docker 설정 추가 필요
-  - (다) Spring이 DB에 명령을 써 두고 재생기가 주기적으로 확인 → 간단하지만 반응이 느림
-- 그 밖의 **결정 질문**
-  - Q-B2b. 누가 누를 수 있나? (관제 담당자 + 연구책임자? 연구책임자만?)
-  - Q-B2c. "시연 모드" 설정을 둘까? (예: `application.yaml`의 `demo.injection-enabled: true`일 때만 버튼 표시, 실제 운영에서는 숨김)
-  - Q-B2d. 기록 방법: `control_events`에 `INJECT` 같은 새 종류를 추가할까, 별도 기록으로 할까? (마커 = "언제 무엇을 주입했나"가 남는 것)
-  - Q-B2e. 버튼 7개(e n m x s d r)를 모두 둘까, 시연에 쓸 것만 둘까?
-  - Q-B2f. 누르기 전에 확인 창을 띄울까?
-- 원칙: 버튼은 **재생기의 가짜 데이터만** 바꾼다. 팔·관문 상태를 직접 바꾸는 코드는 만들지 않는다.
-
-### C1. 주파수 화면 / C2. LSL 입력
-- C1: 재생기가 채널별 주파수 요약(예: 대역별 세기)을 보내도록 **메시지 규격 v3**가 필요 → Spring·화면까지 바뀌는 큰 작업
-- C2: LSL은 같은 네트워크에서 스트림을 자동으로 찾는 방식이라 Docker 안에서 잘 안 보일 수 있음 → PC에서 직접 실행하는 "LSL 다리" 프로그램으로 설계
-- **결정 질문**
-  - Q-C1. 남은 일정에서 C1·C2를 **발표 전에 할지, "발표 후 계획" 슬라이드로 돌릴지** (4장 Q2와 함께 결정)
-  - Q-C2. 한다면 C1만? C2만? (C1은 시연 효과, C2는 "현업 표준 호환"이라는 포트폴리오 가치)
-
----
-
-## 4. 방향 재점검 질문 (코드 작업 전에 먼저 묻기)
-
-> 11/19에 정한 계획(A → B → C, 11/26 코드 동결)은 "하루에 PR 1~2개" 속도를 가정했다.
-> 11/19 하루에 A1~A3을 끝내 이틀 앞서 있지만, **발표 자료와 Docker 전체 리허설은 아직 시작하지 않았다.**
-> 7일 남은 지금, 아래를 다시 확인한다.
-
-**발표 자체**
-- Q1. 발표 시간은 몇 분이고, 그중 **라이브 시연**은 몇 분인가? 슬라이드가 필요한가?
-- Q2. 발표에 반드시 보여 줄 장면은 무엇인가? (예: 정상 동작 → `e` 주입 → 팔 정지 → 채널 지도 빨강 → RAG 안내 → 수동 재개)
-  → 이 장면에 필요 없는 작업은 "발표 후"로 미룰 수 있다
-- Q3. 프로젝트 이름이 "협업 프로젝트"인데 지금 혼자 진행 중이다. 발표에서 협업(팀원, 역할 분담) 요건이 있나? 있다면 어떻게 설명할까?
-- Q4. 청중은 누구인가? (강사·동료 수강생 / 외부 심사 / 채용 담당자) → 기술 깊이와 용어 수준이 달라진다
-
-**일정과 우선순위**
-- Q5. B1·B2까지 하고 C를 미룰지, C1까지 갈지? (Claude 의견: B1·B2 + Docker 리허설 + 발표 자료가 우선. C는 시간이 남으면)
-- Q6. **Docker로 전체를 한 번도 실행해 보지 않았다.** 언제 처음 해 볼까? (Claude 추천: B1 끝나자마자. 발표 직전에 처음 하면 문제를 고칠 시간이 없다)
-- Q7. 발표 자료는 언제부터 만들까? (Claude 추천: 11/24부터 개발과 병행, 리허설 화면을 그대로 캡처해서 사용)
-- Q8. 발표 PC는 이 학원 PC인가, 다른 PC인가? 발표장 인터넷은 되는가? (RAG는 Gemini를 쓰므로 인터넷 필수)
-
-**진행 방식**
-- Q9. Claude Code의 구현 단위: **파일 하나씩** 보여 주고 확인받기 vs **기능 하나**(예: B1-2c 전체)를 만들고 한 번에 확인?
-- Q10. `docs/portfolio-log.md` 기록(PR #19~#21 밀려 있음)은 PR마다 바로 쓸까, 하루 끝에 몰아서 쓸까?
-- Q11. 이번 주는 **학습(이해하며 천천히)**과 **완성도(발표 준비)** 중 어디에 더 무게를 둘까? 설명의 자세한 정도가 달라진다
-
----
-
-## 5. 사용자 답변 기록 (Claude Code가 채운다)
+## 3. 결정 기록 (11/20, 내가 답한 것 — 왜 지금 이렇게 되어 있는지 궁금할 때)
 
 | 질문 | 답 | 날짜 |
 |---|---|---|
@@ -200,7 +97,7 @@
 
 ---
 
-## 6. 환경 메모 (이 PC에서 이미 해결한 것)
+## 4. 환경 메모 (이 PC에서 이미 해결한 것)
 
 - `.env` 필수 키: `MYSQL_*`, `GATEWAY_API_KEY`, `JWT_SECRET`, `DEMO_PASSWORD`, `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.1-flash-lite`
 - Python: Anaconda Prompt에서 `conda activate nuada-bci` (PowerShell에서는 conda가 안 켜질 수 있음)
@@ -210,10 +107,9 @@
   `$resp = Invoke-WebRequest ... -UseBasicParsing; [Text.Encoding]::UTF8.GetString($resp.RawContentStream.ToArray()) | ConvertFrom-Json`
 - 옛 `gate_decisions` 테이블 때문에 `decided_at` 에러가 나면 `DROP TABLE gate_decisions` 후 재시작
 
----
 
-## 7. 세션을 끝낼 때 Claude Code가 할 일
+## 5. 세션을 끝낼 때 Claude Code가 할 일
 
-1. `docs/roadmap.md`의 상태 칸과 이 파일의 2장(지금 상태)·5장(답변 기록)을 갱신한다
-2. 사용자에게 커밋·push를 제안한다 (직접 하지 않고, 명령과 커밋 메시지를 제시)
-3. 다음 세션에서 이어 갈 첫 단계를 이 파일 0장에 한 줄로 적는다
+1. `docs/roadmap.md` 상태 칸, `CLAUDE.md` 7장, 이 파일 1·2장을 갱신한다
+2. 새 결정은 이 파일 3장 표에, 작업 기록은 `docs/portfolio-log.md`에 남긴다 (실험 노트 포함)
+3. 커밋·푸시는 사용자가 요청할 때만 한다
