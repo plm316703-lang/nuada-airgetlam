@@ -11,7 +11,24 @@
   <div class="brand"><b>Nuada Airgetlám</b><span>시스템 관리자</span></div>
   <div class="who"><span id="who"></span><button id="logout" type="button">로그아웃</button></div>
 </header>
-<main>
+<main class="grid">
+  <!-- 계정 발급: 스스로 가입하는 기능은 없고, 직원 계정은 관리자만 만든다 (현업 방식) -->
+  <section class="panel">
+    <h2>직원 계정 만들기 <small>관제 담당자 · 연구자 · 연구책임자 (보호자는 초대, 관리자는 만들지 않음)</small></h2>
+    <form id="createForm" class="row" autocomplete="off">
+      <input id="newEmail" type="email" required maxlength="100" placeholder="이메일 (예: staff1@nuada.test)" aria-label="이메일" style="flex:2;min-width:220px">
+      <input id="newName" type="text" required maxlength="50" placeholder="이름" aria-label="이름" style="flex:1;min-width:120px">
+      <select id="newRole" aria-label="역할">
+        <option value="OPERATOR">관제 담당자</option>
+        <option value="RESEARCHER">연구자</option>
+        <option value="PRINCIPAL_INVESTIGATOR">연구책임자</option>
+      </select>
+      <button class="primary" type="submit">계정 만들기</button>
+    </form>
+    <!-- 임시 비밀번호는 이 상자에서 딱 한 번만 보인다 (서버에도 해시만 남아 다시 볼 방법이 없음) -->
+    <div id="issued" class="issued" hidden role="status" aria-live="polite"></div>
+  </section>
+
   <section class="panel">
     <h2>계정 목록 <small>계정 관리만 · 환자 의료·연구 정보와 실명은 보지 않음</small></h2>
     <!-- 역할별 인원: 누르면 그 역할만 보기 (다시 누르거나 "전체"를 누르면 해제) -->
@@ -22,7 +39,7 @@
     </div>
     <div class="table-wrap" style="max-height:none">
       <table>
-        <thead><tr><th>번호</th><th>이메일(계정)</th><th>역할</th><th>가입</th></tr></thead>
+        <thead><tr><th>번호</th><th>이메일(계정)</th><th>역할</th><th>가입</th><th>비밀번호</th><th></th></tr></thead>
         <tbody id="users"></tbody>
       </table>
     </div>
@@ -37,10 +54,57 @@
 
   (async function () {
     await requireRole(['SYSTEM_ADMIN']);
-    users = await api('/api/admin/users');
     document.getElementById('search').addEventListener('input', render);
-    render();
+    document.getElementById('createForm').addEventListener('submit', createAccount);
+    await reload();
   })();
+
+  async function reload() {
+    users = await api('/api/admin/users');
+    render();
+  }
+
+  async function createAccount(e) {
+    e.preventDefault();
+    try {
+      const r = await api('/api/admin/users', { method: 'POST', body: {
+        email: document.getElementById('newEmail').value.trim(),
+        name: document.getElementById('newName').value.trim(),
+        role: document.getElementById('newRole').value,
+      }});
+      showIssued(`${r.account.email} (${roleName(r.account.role)}) 계정을 만들었습니다.`, r);
+      e.target.reset();
+      await reload();
+    } catch (err) { toast(err.message); }
+  }
+
+  async function reissue(u) {
+    if (!confirm(`${u.email}의 임시 비밀번호를 새로 발급합니다.\n\n` +
+      '• 지금 쓰던 비밀번호로는 더 이상 로그인할 수 없습니다.\n' +
+      '• 본인 확인을 마친 요청인지 확인하세요.')) return;
+    try {
+      const r = await api(`/api/admin/users/${u.id}/temp-password`, { method: 'POST' });
+      showIssued(`${r.account.email}의 임시 비밀번호를 다시 발급했습니다.`, r);
+      await reload();
+    } catch (err) { toast(err.message); }
+  }
+
+  function showIssued(title, r) {
+    const box = document.getElementById('issued');
+    const copy = el('button', { type: 'button', onclick: async () => {
+      try { await navigator.clipboard.writeText(r.tempPassword); toast('복사했습니다.', true); }
+      catch { toast('복사하지 못했습니다. 직접 받아 적어 주세요.'); }
+    }}, '복사');
+    box.replaceChildren(
+      el('b', {}, title),
+      el('div', { class: 'row', style: 'margin:8px 0' },
+        el('span', {}, '임시 비밀번호'), el('code', { class: 'temp-pw' }, r.tempPassword), copy),
+      el('div', { class: 'muted', style: 'font-size:12px' },
+        `• 이 비밀번호는 지금 한 번만 보입니다. 본인에게 안전하게 전달하세요.`, el('br'),
+        `• ${new Date(r.expiresAt).toLocaleString('ko-KR')}까지 첫 로그인에서 바꾸지 않으면 만료됩니다.`),
+      el('button', { type: 'button', style: 'margin-top:8px', onclick: () => { box.hidden = true; box.replaceChildren(); } }, '전달했어요 (닫기)'));
+    box.hidden = false;
+  }
 
   // 계정 수가 많지 않으므로 서버에 다시 묻지 않고, 받은 목록을 화면에서 걸러 보여 준다
   function render() {
@@ -56,12 +120,24 @@
       chip('전체', null, users.length),
       ...ROLE_ORDER.filter(r => count(r) > 0).map(r => chip(roleName(r), r, count(r))));
 
+    const now = Date.now();
+    const pwStatus = (u) => {
+      if (!u.mustChangePassword) return el('span', { class: 'muted' }, '정상');
+      const expired = u.tempPasswordExpiresAt && new Date(u.tempPasswordExpiresAt).getTime() < now;
+      return expired
+        ? el('span', { class: 'badge r-BLOCKED' }, '임시 만료 · 재발급 필요')
+        : el('span', { class: 'badge r-HELD', title: `만료 ${new Date(u.tempPasswordExpiresAt).toLocaleString('ko-KR')}` }, '변경 대기');
+    };
+
     document.getElementById('countText').textContent = `${shown.length} / ${users.length}개`;
     document.getElementById('users').replaceChildren(...(shown.length
       ? shown.map(u => el('tr', {},
           el('td', { class: 'mono' }, u.id), el('td', {}, u.email), el('td', {}, roleName(u.role)),
-          el('td', { class: 'mono' }, new Date(u.createdAt).toLocaleString('ko-KR'))))
-      : [el('tr', {}, el('td', { colspan: 4, class: 'muted' }, '조건에 맞는 계정이 없습니다.'))]));
+          el('td', { class: 'mono' }, new Date(u.createdAt).toLocaleString('ko-KR')),
+          el('td', {}, pwStatus(u)),
+          // 관리자 계정은 서버도 재발급을 거절한다 (권한 가로채기 방지) → 버튼도 두지 않음
+          el('td', {}, u.role === 'SYSTEM_ADMIN' ? '' : el('button', { type: 'button', onclick: () => reissue(u) }, '임시 비밀번호 재발급'))))
+      : [el('tr', {}, el('td', { colspan: 6, class: 'muted' }, '조건에 맞는 계정이 없습니다.'))]));
   }
 </script>
 </body>

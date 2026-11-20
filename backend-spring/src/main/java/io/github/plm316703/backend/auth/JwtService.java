@@ -24,6 +24,7 @@ import java.time.Instant;
 public class JwtService {
 
     public static final String COOKIE_NAME = "NUADA_TOKEN";
+    public static final String PASSWORD_CHANGE_CLAIM = "pwc";
 
     private final JwtEncoder encoder;
     private final JwtDecoder decoder;
@@ -49,7 +50,11 @@ public class JwtService {
         return decoder;
     }
 
-    /** 로그인 성공 → 토큰 발급. subject = 이메일, role = 역할 */
+    /**
+     * 로그인 성공 → 토큰 발급. subject = 이메일, role = 역할.
+     * 비밀번호를 바꿔야 하는 계정이면 pwc(password change) = true를 넣는다
+     * → SecurityConfig가 이 토큰에는 역할 권한을 주지 않아, 비밀번호 변경 외의 API가 모두 막힌다.
+     */
     public String issue(User user) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
@@ -59,6 +64,7 @@ public class JwtService {
                 .expiresAt(now.plus(lifetime))
                 .claim("role", user.getRole().name())
                 .claim("uid", user.getId())
+                .claim(PASSWORD_CHANGE_CLAIM, user.isMustChangePassword())
                 .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         return encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();

@@ -28,6 +28,11 @@ async function api(path, options = {}) {
 /** 로그인 확인 + 역할 확인. 허용되지 않은 역할이면 자기 첫 화면으로 */
 async function requireRole(allowed) {
   const me = await api('/api/auth/me');
+  // 임시 비밀번호 상태면 어느 화면이든 비밀번호 변경부터 (서버도 다른 API를 403으로 막지만, 빈 화면 대신 바로 안내)
+  if (me.mustChangePassword) {
+    location.href = '/password.html';
+    throw new Error('비밀번호 변경 필요');
+  }
   if (!allowed.includes(me.role)) {
     location.href = me.home;
     throw new Error('권한 없음');
@@ -35,7 +40,13 @@ async function requireRole(allowed) {
   const who = document.getElementById('who');
   if (who) who.textContent = `${me.name} · ${roleName(me.role)}`;
   const logout = document.getElementById('logout');
-  if (logout) logout.onclick = async () => { await api('/api/auth/logout', { method: 'POST' }); location.href = '/login.html'; };
+  if (logout) {
+    logout.onclick = async () => { await api('/api/auth/logout', { method: 'POST' }); location.href = '/login.html'; };
+    // 모든 역할 화면 머리글에 같은 버튼을 두려고, 화면마다 HTML을 고치는 대신 여기서 한 번에 붙인다
+    if (!document.getElementById('pwLink')) {
+      logout.before(el('button', { id: 'pwLink', type: 'button', onclick: () => { location.href = '/password.html'; } }, '비밀번호 변경'));
+    }
+  }
   return me;
 }
 
