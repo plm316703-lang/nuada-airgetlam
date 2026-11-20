@@ -133,7 +133,7 @@ nuada-airgetlam/
     `AdminController`(POST /users/{id}/unlock, GET /login-history)
   - 화면: `common.js`(자동 로그아웃 타이머·1분 전 경고·5분마다 증표 갱신), `dashboard.js`(세션 중 예외), `admin.html`(잠김 표시·해제·기록 표), `login.html`(자동 로그아웃 안내)
   - 설정: `security.jwt-lifetime-minutes` 30 (`JWT_LIFETIME_MINUTES`로 시험용 변경 가능), `account.max-failed-logins` 5, `account.lock-minutes` 15
-- ✅ **R4 초대** (브랜치 `feature/invitation`) — 11/20 실행 확인, 커밋·PR 전
+- ✅ **R4 초대** (PR #26 머지)
   - 서버: `user/Invitation`(invitations, 토큰은 SHA-256 해시만), `patient/InvitationService`(환자 등록·보호자 초대(신분 확인 필수)·다시 초대·수락),
     `PatientAdminController`(POST /api/patients, /{id}/guardians, /invitations/{userId}), `InvitationController`(로그인 전 preview·accept),
     `SecurityConfig`(초대 API permitAll + 쿠키 무시), `LoginHistory`(INVITATION_CREATED·ACCEPTED, 칸을 varchar로)
@@ -141,7 +141,14 @@ nuada-airgetlam/
   - 설정: `account.invite-hours` 72
   - ⚠ 발견: Hibernate가 MySQL에서 enum을 `enum('A','B')` 칸으로 만든다 → 새 값을 추가하면 저장 실패 위험.
     `@JdbcTypeCode(SqlTypes.VARCHAR)`를 붙이면 서버 시작 때 varchar로 바뀜(확인함). **B2에서 `control_events.type`에 값을 추가할 때도 같은 처리 필요**
-- 👉 **지금: B2 오류 주입 버튼** — 결정 질문 중
+- ✅ **B2 오류 주입 버튼** (브랜치 `feature/injection-button`) — 11/20 실행 확인, 커밋·PR 전
+  - Spring: `gateway/ReplayerCommander`(열린 판별기 연결에 명령 전송), `arm/InjectionService`(시연 모드 검사·INJECT 기록),
+    `DashboardController`(POST /api/dashboard/inject, 설정에 injectionKinds), `ControlEvent.Type.INJECT`(칸 varchar로 바뀐 것 확인)
+  - 재생기: `replayer.py`의 `command_loop`(받기 스레드, 키보드와 같은 injector 사용)
+  - 화면: 로봇팔 패널에 버튼 7개 (조작 역할 + 시연 모드일 때만, 12초 끊김만 확인 창)
+  - 설정: `app.demo.injection-enabled` (`DEMO_INJECTION_ENABLED`, 기본 true), 규격: `docs/message-spec.md` 6장
+- 👉 **지금: 회고** (`docs/retrospective.md`) — 내 소감 질문 중
+- 나중에: Q-B2g 전체 실행 스크립트(`scripts/run-all.ps1`), C1 주파수 화면, C2 LSL, RAG LangChain 재구현(직접 작성)
 - 그다음: R4 초대 → B2 오류 주입 버튼 → 회고 (상세: `docs/roadmap.md`)
 - 밀린 일: `docs/portfolio-log.md`의 PR #19·#20·#21 항목에서 `(보완 필요)` 칸을 내가 채우기 (#22는 작성 완료)
 

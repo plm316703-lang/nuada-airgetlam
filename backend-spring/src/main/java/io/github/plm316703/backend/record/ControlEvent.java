@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -24,7 +26,8 @@ public class ControlEvent {
         RESUME,          // 수동 재개 성공
         RESUME_DENIED,   // 재개 요청했지만 조건 미충족
         RESET_REQUIRED,  // 오래 끊겨 초기화 필요 상태로
-        RESET            // 초기화 (기본 자세)
+        RESET,           // 초기화 (기본 자세)
+        INJECT           // 시연용 오류 주입 버튼 (B2 마커: 누가 언제 무엇을 주입했나)
     }
 
     @Id
@@ -34,7 +37,9 @@ public class ControlEvent {
     @Column(name = "session_id")
     private Long sessionId;
 
+    // varchar로 저장: MySQL enum 칸이면 INJECT 같은 새 종류를 추가할 때 저장이 실패한다 (R4에서 발견, LoginHistory 참고)
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 20)
     private Type type;
 

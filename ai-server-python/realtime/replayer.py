@@ -94,11 +94,11 @@ class Injector:
         self.left = 0
         self.length = length
 
-    def trigger(self, kind):
+    def trigger(self, kind, source="키보드"):
         with self.lock:
             self.kind = kind
             self.left = self.length if kind in SIGNAL_KINDS else 1
-        print(f"\n▶ 다음 시행부터 '{kind}' 주입", flush=True)
+        print(f"\n▶ 다음 시행부터 '{kind}' 주입 ({source})", flush=True)
 
     def take(self):
         """이번 시행에 적용할 오류 종류 (없으면 None)"""
@@ -118,6 +118,25 @@ def keyboard_loop(injector, stop_event):
             return
         if key in KEYS:
             injector.trigger(KEYS[key])
+
+
+def command_loop(ws, injector):
+    """
+    Spring → 재생기 명령 받기 (B2: 관제 화면 오류 주입 버튼).
+    보내기는 메인 스레드가, 받기는 이 스레드가 한다 (websockets 동기 연결은 보내기·받기를 서로 다른 스레드에서 해도 안전).
+    키보드와 같은 injector를 쓰므로, 버튼은 키를 누른 것과 똑같이 "가짜 데이터"만 바꾼다.
+    연결이 끊기면 반복이 끝나고, 메인 스레드가 다시 연결하면 새 스레드가 시작된다.
+    """
+    try:
+        for raw in ws:
+            try:
+                msg = json.loads(raw)
+            except (TypeError, ValueError):
+                continue                                         # 모르는 형식은 무시 (재생을 멈추지 않음)
+            if msg.get("type") == "command" and msg.get("command") == "inject" and msg.get("kind") in ALL_SCENARIOS:
+                injector.trigger(msg["kind"], source="관제 화면")
+    except Exception:                                           # 끊김 등: 메인 스레드가 다시 연결을 처리
+        pass
 
 
 def build_message(seq, trial, label, model, meta, kind, rng):
@@ -176,6 +195,7 @@ def main():
         try:
             with connect(url, additional_headers={"X-API-Key": api_key}, open_timeout=5) as ws:
                 print(f"연결 성공: {url} · 피험자 {meta['subject']} · 기준값 {meta['threshold']}", flush=True)
+                threading.Thread(target=command_loop, args=(ws, injector), daemon=True).start()
                 seq = 0                                         # 새 연결 = seq 처음부터 (관문 규격)
                 while not stop_event.is_set():
                     if args.trials and sent >= args.trials:
