@@ -32,6 +32,19 @@
 7. 커밋·푸시·PR은 **내가 요청할 때만** 한다. PR 본문 초안은 Claude가 쓴다.
 8. 20년 차 개발자가 1년 미만 초보에게 설명하듯, 처음 나오는 개념은 짧게 풀어 준다.
 
+### 2-1. 가이드 모드 (2026-11-20 결정, **2단계 로드맵 전체에 적용**)
+
+1차 실험(Claude가 구현)의 회고에서 나온 "블랙박스" 문제에 대한 2차 실험이다.
+이 모드에서는 위 1번(Claude가 직접 구현)과 7번(커밋·PR)을 대신해 아래를 따른다.
+
+1. **작업은 내가 직접 한다.** 코드·설정 파일·GitHub 설정·서버 작업·커밋·PR 모두 내가 한다.
+2. Claude의 역할: **다음 할 일을 작은 단계로 안내 → 개념 설명 → 이해 점검 질문 → 내가 한 결과 리뷰**(무엇이 왜 문제인지, 정답 대신 방향).
+3. 막히면 **힌트 → 그래도 막히면 아주 짧은 예시(몇 줄)**까지만. 파일 전체를 써 주지 않는다.
+4. 리뷰할 때 기존 코드(예: `rag/rag_server.py`)·현업 관례와 비교해서 다른 점을 짚어 준다.
+5. Claude가 직접 해도 되는 것: **결정 기록·안내 문서 정리**(CLAUDE.md, roadmap, next-session, portfolio-log), 상태 확인(읽기 전용 조회).
+   그 외 파일·설정 변경은 내가 요청할 때만.
+6. 이 모드를 끝낼 때는 내가 말한다.
+
 ## 3. 프로젝트 소개
 
 - **이름:** Nuada Airgetlám (아일랜드 신화의 은팔 왕 누아다에서 따옴)
@@ -151,7 +164,13 @@ nuada-airgetlam/
   - 공개 전 점검: `backend-spring.zip`(커밋 58dae63, 옛 로컬 DB 설정·비밀번호 포함) 삭제 + `.gitignore`에 `*.zip`·`application-local.yaml` 추가.
     저장소는 **이미 Public**이었고 zip의 비밀번호는 MySQL **root** 것 → root 비밀번호 변경 완료 (11/20)
   - portfolio-log PR #19~#21 빈칸을 당시 PR 본문 근거로 채움. R2·R4·B2의 "확인 중 이상한 점" 칸은 기억나면 내가 보완
-- 👉 **지금: Docker 전체 실행 다시 확인** (브랜치 `chore/docker-run`) — 11/17 확인(deploy.md 7-2) 이후 변경분 반영.
+- 👉 **지금: 2단계 로드맵 (가이드 모드 2-1장, 상세 `docs/roadmap.md` "2단계")**
+  - 순서: **① 협업 기반**(Issues·Projects, PR 템플릿, CI, 브랜치 보호) → ② LangChain RAG + 평가 세트 → ③ 배포(무료 우선) + CD + 모니터링 → ④ PWA(보호자 알림) → ⑤ 모바일 앱
+  - 다음 주 "별도 앱" 계획은 **이 프로젝트를 앱으로 만드는 것(④·⑤)으로 변경**
+  - A0(LangChain 준비)는 끝났지만 커밋 전: 브랜치 `feature/rag-langchain`에 `rag_langchain/README.md`·`requirements.txt`·`.venv`(무시됨)
+    - 위치 `ai-server-python/rag_langchain/`, 별도 서버 포트 8001, `/guide` 응답 모양은 기존과 같게, 별도 가상환경
+    - 단계: A1 개념 → A2 자르기·색인 → A3 검색 비교 → A4 프롬프트·생성 → A5 실패 처리·API → A6 비교표
+- ✅ **Docker 전체 실행 다시 확인** (PR #32) — 11/17 확인(deploy.md 7-2) 이후 변경분 반영.
   Compose에 `DEMO_INJECTION_ENABLED`·`JWT_LIFETIME_MINUTES` 전달, Gemini 기본값 flash-lite, 오류 주입 안내를 버튼으로.
   **Docker 화면 주소는 `http://localhost:8081`** (다른 Docker 프로젝트 `demo`가 8080을 써서 11/20 변경, 로컬 실행은 그대로 8080)
 - 나중에: 전체 실행 스크립트(`scripts/run-all.ps1`), C1 주파수 화면, C2 LSL, RAG LangChain 재구현(직접 작성, Claude는 리뷰만)
