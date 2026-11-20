@@ -20,10 +20,12 @@ public class ClassifierWebSocketHandler extends TextWebSocketHandler {
 
     private final GateService gateService;
     private final SequenceTracker sequenceTracker;
+    private final ReplayerCommander commander;
 
-    // 연결이 열렸을 때: 누가(id) 어디서(addr) 왔는지 기록
+    // 연결이 열렸을 때: 누가(id) 어디서(addr) 왔는지 기록 + 오류 주입 명령을 보낼 수 있게 등록 (B2)
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
+        commander.register(session);
         log.info("연결됨 id={} addr={}", session.getId(), session.getRemoteAddress());
     }
 
@@ -43,6 +45,7 @@ public class ClassifierWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         sequenceTracker.forget(session.getId());   // 이 연결의 seq 장부 삭제 (메모리 누수 방지)
+        commander.unregister(session);
         log.info("연결 종료 id={} code={}", session.getId(), status.getCode());
     }
 }

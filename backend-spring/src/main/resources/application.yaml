@@ -63,3 +63,5 @@ rag:
 app:
   demo:
     password: ${DEMO_PASSWORD:}       # 시연 계정 비밀번호 (비어 있으면 시연 계정을 만들지 않음)
+    # 관제 화면 오류 주입 버튼 (사용자 결정 11/20). 실제 장비를 쓰는 운영 환경에서는 .env에 false로 꺼 둔다
+    injection-enabled: ${DEMO_INJECTION_ENABLED:true}

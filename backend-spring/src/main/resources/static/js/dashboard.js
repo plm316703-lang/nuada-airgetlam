@@ -23,7 +23,7 @@ const ERROR_KO = {
 };
 const CONTROL_KO = {
   SESSION_START: '세션 시작', SESSION_END: '세션 종료', STOP: '정지', RESUME: '수동 재개',
-  RESUME_DENIED: '재개 거부', RESET_REQUIRED: '초기화 필요', RESET: '초기화',
+  RESUME_DENIED: '재개 거부', RESET_REQUIRED: '초기화 필요', RESET: '초기화', INJECT: '오류 주입(시연)',
 };
 
 (async function init() {
@@ -198,6 +198,31 @@ function renderConfig(c) {
     el('dt', {}, '초기화 필요'), el('dd', {}, `${c.watchdogResetMs} ms`),
     el('dt', {}, '재개 조건'), el('dd', {}, `연속 정상 ${c.resumeRequiredClean}개`),
   );
+  renderInjectButtons(c.injectionKinds || {});
+}
+
+// ───────────── 시연용 오류 주입 (B2) ─────────────
+// 버튼은 재생기의 가짜 데이터만 바꾼다. 정지·차단·RAG 안내는 그 데이터가 평소처럼 관문을 지나며 일어난다.
+
+function renderInjectButtons(kinds) {
+  const box = document.getElementById('injectBox');
+  const canControl = CONTROL_ROLES.includes(me.role);
+  // 시연 모드가 꺼져 있으면 서버가 종류를 비워 보낸다 → 버튼 자체를 그리지 않음 (서버도 요청을 거절)
+  if (!canControl || !Object.keys(kinds).length) { box.replaceChildren(); return; }
+  box.replaceChildren(
+    el('div', { class: 'muted', style: 'font-size:12px;margin:12px 0 6px' }, '오류 주입 (시연) · 재생기의 가짜 데이터에만 섞입니다'),
+    el('div', { class: 'row', style: 'gap:6px' },
+      ...Object.entries(kinds).map(([kind, label]) =>
+        el('button', { type: 'button', class: kind === 'reset' ? 'danger' : '', onclick: () => inject(kind, label) }, label))));
+}
+
+async function inject(kind, label) {
+  // 12초 끊김만 확인 (Q-B2f): 팔이 "초기화 필요"가 되어 되돌리는 데 손이 많이 가기 때문
+  if (kind === 'reset' && !confirm(`'${label}'를 주입합니다.\n\n재생기가 12초 동안 데이터를 보내지 않아 팔이 "초기화 필요" 상태가 됩니다.\n초기화 → 수동 재개를 직접 해야 합니다.`)) return;
+  try {
+    await api('/api/dashboard/inject', { method: 'POST', body: { kind } });
+    toast(`'${label}' 주입 명령을 보냈습니다. 다음 판단부터 반영됩니다.`, true);
+  } catch (e) { toast(e.message); }
 }
 
 // ───────────── 판단 기록 ─────────────

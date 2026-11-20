@@ -106,3 +106,22 @@
 | 버전 | 날짜 | 내용 |
 |---|---|---|
 | 2 | 2026-11-17 | signal(신호 품질), scenario 추가, timestamp 시간대 필수, 명령 유효시간 2초·워치독 3초/10초 결정, 검사 ④~⑦ 구현 |
+| 2 | 2026-11-20 | Spring → 재생기 `command` 메시지 추가 (아래 6장, B2 오류 주입 버튼). 재생기 → Spring 메시지는 그대로 |
+
+## 6. Spring → 재생기 명령 (2026-11-20, B2)
+
+같은 `/ws/classifier` 연결을 거꾸로 쓴다 (API 키로 이미 인증된 연결, 새 포트 없음).
+
+```json
+{ "version": 2, "type": "command", "command": "inject", "kind": "electrode" }
+```
+
+| 칸 | 값 |
+|---|---|
+| `type` | `"command"` (판별 메시지 `classification`과 구분) |
+| `command` | `"inject"` (지금은 이것 하나) |
+| `kind` | `electrode` `noise` `muscle` `mismatch` `stale` `disconnect` `reset` — 재생기 키 `e n m x s d r`과 같음 |
+
+- 재생기는 키보드 입력과 **같은 방식**으로 다음 시행부터 가짜 데이터에 오류를 섞는다. 모르는 메시지는 무시한다.
+- Spring은 명령을 보낸 뒤 `control_events`에 `INJECT`(누가·언제·무엇)를 남긴다. 팔·관문 상태는 직접 바꾸지 않는다.
+- 시연 모드(`app.demo.injection-enabled`, `.env`의 `DEMO_INJECTION_ENABLED`)가 꺼져 있으면 Spring이 명령을 보내지 않는다.

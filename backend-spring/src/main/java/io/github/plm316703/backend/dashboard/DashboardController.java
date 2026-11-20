@@ -2,6 +2,7 @@ package io.github.plm316703.backend.dashboard;
 
 import io.github.plm316703.backend.arm.ArmControlService;
 import io.github.plm316703.backend.arm.ArmSupervisor;
+import io.github.plm316703.backend.arm.InjectionService;
 import io.github.plm316703.backend.auth.CurrentUser;
 import io.github.plm316703.backend.gateway.DecisionGate;
 import io.github.plm316703.backend.gateway.FreshnessChecker;
@@ -10,6 +11,8 @@ import io.github.plm316703.backend.record.ControlEventRepository;
 import io.github.plm316703.backend.record.DeviceErrorRepository;
 import io.github.plm316703.backend.record.GateDecisionRepository;
 import io.github.plm316703.backend.session.SessionRepository;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 관제 화면 API (웨이터).
@@ -26,6 +30,7 @@ import java.util.List;
  *  POST /api/dashboard/session/end    : 세션 종료
  *  POST /api/dashboard/arm/resume     : 수동 재개 (서버가 조건 재검사)
  *  POST /api/dashboard/arm/reset      : 초기화 (기본 자세)
+ *  POST /api/dashboard/inject         : 시연용 오류 주입 → 재생기 (B2, 시연 모드일 때만)
  */
 @RestController
 @RequestMapping("/api/dashboard")
@@ -41,11 +46,18 @@ public class DashboardController {
     private final GateService gateService;
     private final FreshnessChecker freshnessChecker;
     private final DecisionGate decisionGate;
+    private final InjectionService injection;
     private final CurrentUser currentUser;
 
-    /** 화면에 표시하는 기준값 (설정 파일 값 그대로) */
+    /**
+     * 화면에 표시하는 기준값 (설정 파일 값 그대로).
+     * injectionKinds: 시연 모드가 켜져 있을 때만 채움 (비어 있으면 화면이 주입 버튼을 그리지 않음)
+     */
     public record GateConfig(double moveThreshold, double minSignalQuality, long staleCommandMs,
-                             long watchdogStopMs, long watchdogResetMs, int resumeRequiredClean) {}
+                             long watchdogStopMs, long watchdogResetMs, int resumeRequiredClean,
+                             Map<String, String> injectionKinds) {}
+
+    public record InjectRequest(@NotBlank String kind) {}
 
     public record State(Views.ArmView arm, Views.SessionView session, List<Views.DecisionView> decisions,
                         List<Views.ErrorView> errors, List<Views.ControlView> controls, GateConfig config) {}
@@ -58,7 +70,8 @@ public class DashboardController {
         var session = sessionRepository.findFirstByEndedAtIsNullOrderByStartedAtDesc()
                 .map(Views.SessionView::of).orElse(null);
         var config = new GateConfig(decisionGate.moveThreshold(), gateService.minSignalQuality(),
-                freshnessChecker.staleMs(), arm.watchdogStopMs(), arm.watchdogResetMs(), arm.requiredClean());
+                freshnessChecker.staleMs(), arm.watchdogStopMs(), arm.watchdogResetMs(), arm.requiredClean(),
+                injection.enabled() ? InjectionService.KINDS : Map.of());
         return new State(
                 Views.ArmView.of(arm.snapshot(Instant.now())),
                 session,
@@ -89,5 +102,14 @@ public class DashboardController {
     public Views.ArmView reset(Authentication auth) {
         control.reset(currentUser.get(auth));
         return Views.ArmView.of(arm.snapshot(Instant.now()));
+    }
+
+    /**
+     * 시연용 오류 주입 (B2). POST라서 SecurityConfig 규칙상 조작 역할(관제 담당자·연구책임자)만 부를 수 있다 (Q-B2b).
+     * 돌려주는 값: 명령을 받은 재생기 수
+     */
+    @PostMapping("/inject")
+    public Map<String, Integer> inject(@Valid @RequestBody InjectRequest req, Authentication auth) {
+        return Map.of("sent", injection.inject(req.kind(), currentUser.get(auth)));
     }
 }
