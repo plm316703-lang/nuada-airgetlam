@@ -39,8 +39,23 @@
     </div>
     <div class="table-wrap" style="max-height:none">
       <table>
-        <thead><tr><th>번호</th><th>이메일(계정)</th><th>역할</th><th>가입</th><th>비밀번호</th><th></th></tr></thead>
+        <thead><tr><th>번호</th><th>이메일(계정)</th><th>역할</th><th>가입</th><th>상태</th><th></th></tr></thead>
         <tbody id="users"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 감사 기록: 로그인 성공·실패와 계정 관리 동작 (보관 방침 1년, 자동 삭제는 아직 없음) -->
+  <section class="panel">
+    <h2>로그인·계정 기록 <small>최근 100건 · IP 포함</small></h2>
+    <div class="row" style="margin-bottom:12px">
+      <label class="row" style="gap:6px;font-size:13px"><input id="failuresOnly" type="checkbox"> 실패·잠김만 보기</label>
+      <button id="reloadHistory" type="button">새로고침</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>시각</th><th>내용</th><th>계정</th><th>처리자</th><th>IP</th></tr></thead>
+        <tbody id="history"></tbody>
       </table>
     </div>
   </section>
@@ -52,16 +67,51 @@
   let users = [];
   let roleFilter = null;   // null = 전체
 
+  const EVENT_KO = {
+    LOGIN_SUCCESS: '로그인 성공', LOGIN_FAILED: '로그인 실패', ACCOUNT_LOCKED: '잠김 (연속 실패)',
+    ACCOUNT_UNLOCKED: '잠금 해제', ACCOUNT_CREATED: '계정 발급', TEMP_PASSWORD_ISSUED: '임시 비밀번호 재발급',
+    PASSWORD_CHANGED: '비밀번호 변경',
+  };
+  const FAIL_KO = { BAD_CREDENTIALS: '이메일·비밀번호 틀림', LOCKED: '잠긴 상태에서 시도', TEMP_EXPIRED: '임시 비밀번호 만료' };
+  const BAD_EVENTS = ['LOGIN_FAILED', 'ACCOUNT_LOCKED'];
+
   (async function () {
     await requireRole(['SYSTEM_ADMIN']);
     document.getElementById('search').addEventListener('input', render);
     document.getElementById('createForm').addEventListener('submit', createAccount);
+    document.getElementById('failuresOnly').addEventListener('change', loadHistory);
+    document.getElementById('reloadHistory').addEventListener('click', reload);
     await reload();
   })();
 
+  // 계정 표와 기록 표는 같은 동작(발급·재발급·해제)으로 함께 바뀌므로 함께 다시 읽는다
   async function reload() {
     users = await api('/api/admin/users');
     render();
+    await loadHistory();
+  }
+
+  async function loadHistory() {
+    const only = document.getElementById('failuresOnly').checked;
+    const rows = await api(`/api/admin/login-history?failuresOnly=${only}`);
+    document.getElementById('history').replaceChildren(...(rows.length
+      ? rows.map(h => el('tr', {},
+          el('td', { class: 'mono' }, new Date(h.occurredAt).toLocaleString('ko-KR')),
+          el('td', {}, el('span', { class: BAD_EVENTS.includes(h.event) ? 'r-BLOCKED' : '' }, EVENT_KO[h.event] || h.event),
+            h.failReason ? el('span', { class: 'muted' }, ` · ${FAIL_KO[h.failReason] || h.failReason}`) : ''),
+          el('td', {}, h.email || ''),
+          el('td', { class: 'muted' }, h.actorEmail || '본인'),
+          el('td', { class: 'mono' }, h.ip || '')))
+      : [el('tr', {}, el('td', { colspan: 5, class: 'muted' }, '기록이 없습니다.'))]));
+  }
+
+  async function unlock(u) {
+    if (!confirm(`${u.email}의 잠금을 풉니다.\n본인 확인을 마친 요청인지 확인하세요.`)) return;
+    try {
+      await api(`/api/admin/users/${u.id}/unlock`, { method: 'POST' });
+      toast('잠금을 풀었습니다.', true);
+      await reload();
+    } catch (err) { toast(err.message); }
   }
 
   async function createAccount(e) {
@@ -81,6 +131,7 @@
   async function reissue(u) {
     if (!confirm(`${u.email}의 임시 비밀번호를 새로 발급합니다.\n\n` +
       '• 지금 쓰던 비밀번호로는 더 이상 로그인할 수 없습니다.\n' +
+      '• 잠겨 있던 계정이면 잠금도 함께 풀립니다.\n' +
       '• 본인 확인을 마친 요청인지 확인하세요.')) return;
     try {
       const r = await api(`/api/admin/users/${u.id}/temp-password`, { method: 'POST' });
@@ -121,22 +172,31 @@
       ...ROLE_ORDER.filter(r => count(r) > 0).map(r => chip(roleName(r), r, count(r))));
 
     const now = Date.now();
-    const pwStatus = (u) => {
-      if (!u.mustChangePassword) return el('span', { class: 'muted' }, '정상');
-      const expired = u.tempPasswordExpiresAt && new Date(u.tempPasswordExpiresAt).getTime() < now;
-      return expired
-        ? el('span', { class: 'badge r-BLOCKED' }, '임시 만료 · 재발급 필요')
-        : el('span', { class: 'badge r-HELD', title: `만료 ${new Date(u.tempPasswordExpiresAt).toLocaleString('ko-KR')}` }, '변경 대기');
+    const hhmm = (iso) => new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    // 잠김이 가장 급한 상태라 먼저 보여 주고, 비밀번호 상태는 그 옆에 함께 붙인다
+    const status = (u) => {
+      const parts = [];
+      if (u.locked) parts.push(el('span', { class: 'badge r-BLOCKED' }, `잠김 · ${hhmm(u.lockedUntil)}까지`));
+      if (u.mustChangePassword) {
+        const expired = u.tempPasswordExpiresAt && new Date(u.tempPasswordExpiresAt).getTime() < now;
+        parts.push(expired
+          ? el('span', { class: 'badge r-BLOCKED' }, '임시 만료 · 재발급 필요')
+          : el('span', { class: 'badge r-HELD', title: `만료 ${new Date(u.tempPasswordExpiresAt).toLocaleString('ko-KR')}` }, '변경 대기'));
+      }
+      return parts.length ? el('span', { class: 'row', style: 'gap:4px' }, ...parts) : el('span', { class: 'muted' }, '정상');
     };
+    // 관리자 계정은 서버도 재발급·해제를 거절한다 (권한 가로채기 방지) → 버튼도 두지 않음
+    const actions = (u) => u.role === 'SYSTEM_ADMIN' ? '' : el('span', { class: 'row', style: 'gap:4px' },
+      u.locked ? el('button', { type: 'button', onclick: () => unlock(u) }, '잠금 해제') : null,
+      el('button', { type: 'button', onclick: () => reissue(u) }, '임시 비밀번호 재발급'));
 
     document.getElementById('countText').textContent = `${shown.length} / ${users.length}개`;
     document.getElementById('users').replaceChildren(...(shown.length
       ? shown.map(u => el('tr', {},
           el('td', { class: 'mono' }, u.id), el('td', {}, u.email), el('td', {}, roleName(u.role)),
           el('td', { class: 'mono' }, new Date(u.createdAt).toLocaleString('ko-KR')),
-          el('td', {}, pwStatus(u)),
-          // 관리자 계정은 서버도 재발급을 거절한다 (권한 가로채기 방지) → 버튼도 두지 않음
-          el('td', {}, u.role === 'SYSTEM_ADMIN' ? '' : el('button', { type: 'button', onclick: () => reissue(u) }, '임시 비밀번호 재발급'))))
+          el('td', {}, status(u)),
+          el('td', {}, actions(u))))
       : [el('tr', {}, el('td', { colspan: 6, class: 'muted' }, '조건에 맞는 계정이 없습니다.'))]));
   }
 </script>

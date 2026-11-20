@@ -50,6 +50,11 @@ public class JwtService {
         return decoder;
     }
 
+    /** 증표 수명(분) = 자동 로그아웃 시간. 화면 타이머가 같은 값을 쓰도록 내려준다 */
+    public long lifetimeMinutes() {
+        return lifetime.toMinutes();
+    }
+
     /**
      * 로그인 성공 → 토큰 발급. subject = 이메일, role = 역할.
      * 비밀번호를 바꿔야 하는 계정이면 pwc(password change) = true를 넣는다
