@@ -82,6 +82,27 @@ main { padding: 16px 20px 40px; max-width: 1400px; margin: 0 auto; }
 .chan-legend { font-size: 11px; color: var(--muted); justify-content: center; margin-top: 6px; gap: 4px 10px; }
 .chan-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 3px; vertical-align: -1px; }
 
+/* ---------- 역할 화면 (환자·보호자·관리자) ----------
+   환자·보호자는 관제 전문가가 아니므로 "지금 어떤 상태인지"를 큰 글씨 한 문장으로 먼저 보여 준다.
+   색은 왼쪽 띠에만 쓰고 글자는 기본색 → 색을 구분하기 어려운 사람도 문장으로 이해할 수 있게 */
+.now { font-size: 19px; line-height: 1.5; padding: 14px 16px; border-radius: var(--radius); background: var(--panel-2);
+  border-left: 6px solid var(--idle); }
+.now.now-RUNNING { border-color: var(--ok); }
+.now.now-STOPPED { border-color: var(--warn); }
+.now.now-RESET_REQUIRED { border-color: var(--bad); }
+.stops { list-style: none; margin: 0; padding: 0; }
+.stops li { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.stops li:last-child { border-bottom: 0; }
+.stops time { font-family: var(--mono); color: var(--muted); flex: none; }
+.big { font-size: 17px; margin: 0 0 12px; }
+details.more { margin-top: 12px; font-size: 13px; }
+details.more summary { cursor: pointer; color: var(--muted); }
+details.more .kv { margin-top: 8px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.chip { padding: 6px 12px; border-radius: 999px; background: var(--panel-2); font-size: 13px; }
+.chip b { margin-left: 6px; font-family: var(--mono); }
+.chip.on { border-color: var(--accent); color: var(--accent); }
+
 /* ---------- 로봇팔 ---------- */
 .arm-wrap { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(200px, 1fr); gap: 14px; align-items: start; }
 @media (max-width: 1180px) { .arm-wrap { grid-template-columns: 1fr; } }

@@ -167,7 +167,11 @@ public class GateService {
         log.warn("거부 id={} seq={} reason={} detail={}", connectionId, msg == null ? null : msg.seq(),
                 rejection.reason(), rejection.detail());
 
-        boolean stoppedNow = arm.stop(rejection.reason().name());
+        // 정지 사유에 설명까지 담는다: 관제 화면은 원인(예: issue=ELECTRODE_CONTACT)을 바로 보고,
+        // 환자·보호자 화면은 이 원인으로 알맞은 쉬운 문장을 고를 수 있다 (FriendlyStopReason)
+        boolean stoppedNow = arm.stop(rejection.detail() == null
+                ? rejection.reason().name()
+                : rejection.reason() + ": " + rejection.detail());
         Long sessionId = arm.snapshot(Instant.now()).sessionId();
 
         GateDecision saved = decisionRepository.save(decisionOf(connectionId, msg, GateResult.BLOCKED, rejection.reason(), rejection.detail()));

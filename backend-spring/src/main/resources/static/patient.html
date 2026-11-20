@@ -11,16 +11,35 @@
   <div class="brand"><b>Nuada Airgetlám</b><span>환자 화면</span></div>
   <div class="who"><span id="who"></span><button id="logout" type="button">로그아웃</button></div>
 </header>
-<main class="grid two">
+<main class="grid">
+  <!-- 1줄: 지금 상태 한 문장 (가장 먼저 눈에 들어와야 하는 정보) -->
   <section class="panel">
-    <h2>내 로봇팔 <small id="armBadge"></small></h2>
-    <canvas id="arm" aria-label="내 로봇팔 상태 그림"></canvas>
-    <p id="armNote" class="muted" style="margin:10px 0 0"></p>
+    <h2>지금 내 로봇팔 <small id="armBadge"></small></h2>
+    <div id="now" class="now" role="status" aria-live="polite">불러오는 중…</div>
   </section>
+
+  <!-- 2줄: 팔 그림 + 오늘 기록 -->
+  <section class="grid two">
+    <div class="panel">
+      <h2>로봇팔 모습</h2>
+      <canvas id="arm" aria-label="내 로봇팔 상태 그림"></canvas>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">관문 검사를 통과한 명령만 팔을 움직여요. 멈춘 팔은 관제 담당자가 확인한 뒤에만 다시 움직여요.</p>
+    </div>
+    <div class="panel">
+      <h2>오늘 멈춘 기록 <small id="stopCount"></small></h2>
+      <ul id="stops" class="stops"></ul>
+    </div>
+  </section>
+
+  <!-- 3줄: 연구 참여 (본인 결정) -->
   <section class="panel">
     <h2>연구 참여</h2>
-    <dl class="kv" id="status"></dl>
-    <div id="consentBox" style="margin-top:14px"></div>
+    <p id="participation" class="big"></p>
+    <div id="consentBox"></div>
+    <details class="more">
+      <summary>자세히 보기</summary>
+      <dl class="kv" id="status"></dl>
+    </details>
     <p class="muted" style="font-size:12px;margin-top:14px">본인의 결정이 항상 우선합니다. 언제든 동의하거나 철회할 수 있습니다.</p>
   </section>
 </main>
@@ -32,16 +51,52 @@
     setInterval(() => refresh().catch(() => {}), 1000);   // 1초마다 내 팔 상태 갱신
   })();
 
+  // 환자에게는 밀리초까지 필요 없어서 "시:분"만 보여 준다
+  const hhmm = (iso) => new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+  const fmtDate = (iso) => iso ? new Date(iso).toLocaleString('ko-KR') : '-';
+
   async function refresh() {
     const s = await api('/api/me/patient');
+    renderNow(s.arm);
+    renderStops(s.todayStops);
+    renderParticipation(s);
+  }
+
+  function renderNow(a) {
+    const now = document.getElementById('now');
+    const state = a ? a.state : 'IDLE';
+    // 문장은 서버가 쉬운 말로 만들어 보낸다 (기술 문구는 이 화면으로 오지 않음)
+    now.textContent = a ? a.message : '지금 진행 중인 내 측정 세션이 없어요.';
+    now.className = `now now-${state}`;
+    document.getElementById('armBadge').replaceChildren(el('span', { class: `badge st-${state}` }, stateName(state)));
+    drawArm(document.getElementById('arm'), a ? a.angle : 90, state);
+  }
+
+  function renderStops(stops) {
+    const list = document.getElementById('stops');
+    const key = JSON.stringify(stops);
+    if (list.dataset.key === key) return;   // 1초마다 갱신하지만 바뀐 게 없으면 다시 그리지 않음 (깜빡임 방지)
+    list.dataset.key = key;
+    document.getElementById('stopCount').textContent = stops.length ? `${stops.length}번` : '';
+    list.replaceChildren(...(stops.length
+      ? stops.map(x => el('li', {}, el('time', {}, hhmm(x.at)), el('span', {}, x.reason)))
+      : [el('li', { class: 'muted' }, '오늘은 멈춘 적이 없어요.')]));
+  }
+
+  function renderParticipation(s) {
+    document.getElementById('participation').textContent =
+      s.participating ? '연구에 참여하고 있어요. 로봇팔을 사용할 수 있어요.'
+      : !s.enrolled ? '아직 연구에 등록되지 않았어요. 연구책임자가 등록해야 해요.'
+      : !s.consent ? '연구 동의를 하지 않은 상태예요. 동의하면 로봇팔을 사용할 수 있어요.'
+      : '연구 참여 상태를 확인 중이에요.';
+
     document.getElementById('status').replaceChildren(
       el('dt', {}, '이름'), el('dd', {}, s.name),
       el('dt', {}, '연구 코드'), el('dd', {}, s.researchCode),
-      el('dt', {}, '연구 등록'), el('dd', {}, s.enrolled ? '등록됨' : '미등록 (연구책임자가 등록)'),
+      el('dt', {}, '연구 등록'), el('dd', {}, s.enrolled ? '등록됨' : '미등록'),
       el('dt', {}, '연구 동의'), el('dd', {}, s.consent ? '동의함' : '동의하지 않음'),
-      el('dt', {}, '참여 상태'), el('dd', {}, s.participating ? '참여 중 (로봇팔 사용 가능)' : '참여 중 아님'),
-      el('dt', {}, '동의 시각'), el('dd', {}, s.consentedAt ? new Date(s.consentedAt).toLocaleString('ko-KR') : '-'),
-      el('dt', {}, '철회 시각'), el('dd', {}, s.consentWithdrawnAt ? new Date(s.consentWithdrawnAt).toLocaleString('ko-KR') : '-'),
+      el('dt', {}, '동의 시각'), el('dd', {}, fmtDate(s.consentedAt)),
+      el('dt', {}, '철회 시각'), el('dd', {}, fmtDate(s.consentWithdrawnAt)),
     );
 
     const box = document.getElementById('consentBox');
@@ -50,18 +105,6 @@
       box.replaceChildren(s.consent
         ? el('button', { class: 'danger', type: 'button', onclick: withdraw }, '연구 동의 철회')
         : el('button', { class: 'primary', type: 'button', onclick: consent }, '연구에 동의하기'));
-    }
-
-    const a = s.arm;
-    const canvas = document.getElementById('arm');
-    if (a) {
-      drawArm(canvas, a.angle, a.state);
-      document.getElementById('armBadge').replaceChildren(el('span', { class: `badge st-${a.state}` }, stateName(a.state)));
-      document.getElementById('armNote').textContent = a.stopReason ? `정지 사유: ${a.stopReason} — 관제 담당자가 확인 후 재개합니다.` : '관문을 통과한 명령만 팔을 움직입니다.';
-    } else {
-      drawArm(canvas, 90, 'IDLE');
-      document.getElementById('armBadge').replaceChildren(el('span', { class: 'badge st-IDLE' }, '세션 없음'));
-      document.getElementById('armNote').textContent = '지금 진행 중인 내 측정 세션이 없습니다.';
     }
   }
 

@@ -10,7 +10,7 @@
 - 프로그래밍 경력 1년 미만의 초보 개발자, 국비 과정 수강 중 (Java·Spring·Python)
 - 목표: 2027년 3월까지 개발자 취업 (RAG 분야 관심), 장기적으로 BCI(뇌-컴퓨터 인터페이스) 분야
 - 이 프로젝트는 **"Claude Code로 프로젝트가 어떻게 만들어지는지" 보는 첫 실험**이다. (2026-11-20 결정)
-  - 국비 과정의 협업 프로젝트에서 나와 혼자 진행. **발표 없음**, 기간은 **2026-11-22(일)까지**
+  - 국비 과정의 협업 프로젝트에서 나와 혼자 진행. **발표 없음**. 처음엔 11/22까지였으나 **11/20에 기한 해제** (계획한 기능을 다 하기로)
   - 결과물보다 **실험 기록**(AI가 잘한 것 / 틀린 것·내가 잡은 것 / 내가 결정한 것)이 중요
   - 면접관 공개·GitHub 공개 여부는 미정 → 언제든 공개할 수 있는 상태로 유지
   - 다음 주(11/23~)에는 별도로 앱을 만들 예정
@@ -76,11 +76,12 @@ nuada-airgetlam/
 └── docker-compose.yml
 ```
 
-## 5. DB 설계 요약 (테이블 8개)
+## 5. DB 설계 요약 (테이블 8개 → R3·R4 후 10개)
 
-`users`, `patients`, `patient_guardians`, `researcher_assignments`, `sessions`,
+`users`(R2·R3에서 비밀번호 변경 필요·실패 횟수·잠금 해제 시각 추가), `patients`, `patient_guardians`, `researcher_assignments`, `sessions`,
 `gate_decisions`(관문 판단: MOVE/ABSTAIN/HELD/BLOCKED, 연결 id, 피험자 번호, 문제 채널 포함),
-`device_errors`(장비 오류 + RAG 안내 결과), `control_events`(정지·재개·초기화·세션)
+`device_errors`(장비 오류 + RAG 안내 결과), `control_events`(정지·재개·초기화·세션),
+`login_history`(R3 예정: 로그인 성공·실패 기록), `invitations`(R4 예정: 환자·보호자 초대 링크)
 
 ## 6. 내가 내린 설계 결정 (바꾸기 전에 반드시 나에게 물어볼 것)
 
@@ -95,8 +96,11 @@ nuada-airgetlam/
 - RAG 답변은 매뉴얼의 수치·출처를 그대로 옮긴다 (`rag_server.py`의 `SYSTEM_RULES` 7~9번).
 - 문제 채널(`bad_channels`)은 DB에 `"C3,Cz,C4"` 글자로 저장, 채널 지도는 **그래프 옆 새 패널**에 둔다.
 - 예외: 잘못된 요청은 `IllegalArgumentException`, 지금 상태로 불가능하면 `IllegalStateException`.
+- 환자·보호자에게는 정지 사유를 **쉬운 말로만** 보낸다 (서버에서 변환, 기술 문구는 관제 화면에서만).
+- 계정은 스스로 가입하지 않고 **관리자가 발급**한다. 임시 비밀번호는 서버가 만들어 한 번만 보여 주고, 첫 로그인 때 바꾸게 한다.
+- 로그인 실패 5회 → 15분 잠금, 30분 무조작 자동 로그아웃 (관제 화면은 세션 진행 중이면 제외).
 
-## 7. 현재 진행 상황 (2026-11-19 학원 PC 작업 종료 시점)
+## 7. 현재 진행 상황 (2026-11-20 갱신)
 
 > **세션을 시작하면 `docs/next-session.md`를 먼저 읽는다.**
 
@@ -104,7 +108,7 @@ nuada-airgetlam/
 - ✅ A1 Chart.js 저장소 포함 (PR #19)
 - ✅ A2 RAG 25초 제한 + 생성 실패 시 근거 표시 (PR #20)
 - ✅ A3 RAG 매뉴얼 출처 + 답변 규칙 보강 (PR #21)
-- 👉 **지금: B1 채널 상태 지도** (브랜치 `feature/channel-map`)
+- ✅ **B1 채널 상태 지도** (PR #22 머지)
   - ✅ B1-2a `record/GateDecision`에 `badChannels`(String, 길이 200, null 허용) 필드 + `@Builder` 매개변수
   - ✅ B1-2b `gateway/GateService`에 `joinChannels()` 도우미 추가, `decisionOf()`에서 `.badChannels(...)` 저장
     - ✅ 11/20 실행 확인 완료 (`bad_channels` 칸 생성, `e` 주입 시 값 저장)
@@ -112,9 +116,14 @@ nuada-airgetlam/
   - ✅ B1-3 그래프 옆 새 패널에 22채널 머리 지도 (`dashboard.html`, `dashboard.js`의 `updateChannelMap`, `app.css`) — 11/20 실행 확인
     - 마지막 판단 1개 기준 / 신호 정보 없으면 회색 / 문제 채널 없는 잡음(`n`·`m`)은 머리 윤곽 주황
     - 채널 목록·순서: `ai-server-python/realtime/signal_quality.py`의 `CHANNELS` (BCI IV 2a 몽타주)
-  - ✅ B1-4 재생기 `e`·`n`·`m` 주입 시 지도 확인 (11/20) → PR 머지 후 B2로
-- 그다음: B2 오류 주입 버튼 → 11/22 회고 (C1·C2는 실험 범위 밖, 상세: `docs/roadmap.md`)
-- 밀린 일: `docs/portfolio-log.md`에 PR #19·#20·#21 기록 (실험 노트 형식으로)
+  - ✅ B1-4 재생기 `e`·`n`·`m` 주입 시 지도 확인 (11/20)
+- ✅ **R1 역할 UI** (브랜치 `feature/role-ui`) — 11/20 확인, 커밋·푸시 완료, PR 머지 전
+  - 서버: `patient/FriendlyStopReason`(쉬운 정지 사유), `MeController`가 `message`·`todayStops`를 보냄,
+    `ControlEventRepository.findPatientEventsSince()`(그 환자 세션의 STOP만), `GateService`가 팔 정지 사유에 설명도 담음
+  - 화면: `patient.html`·`guardian.html`(지금 상태 한 문장 + 오늘 멈춘 기록), `admin.html`(역할별 인원 + 이메일 찾기)
+- 👉 **지금: R2 계정 발급** — 결정 질문(Q-R2a·b·c) 답 기다리는 중
+- 그다음: R3 로그인 보안 → R4 초대 → B2 오류 주입 버튼 → 회고 (상세: `docs/roadmap.md`)
+- 밀린 일: `docs/portfolio-log.md`의 PR #19·#20·#21 항목에서 `(보완 필요)` 칸을 내가 채우기 (#22는 작성 완료)
 
 ## 8. 작업 규칙
 

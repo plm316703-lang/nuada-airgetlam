@@ -14,6 +14,12 @@
 <main>
   <section class="panel">
     <h2>계정 목록 <small>계정 관리만 · 환자 의료·연구 정보와 실명은 보지 않음</small></h2>
+    <!-- 역할별 인원: 누르면 그 역할만 보기 (다시 누르거나 "전체"를 누르면 해제) -->
+    <div id="chips" class="chips" role="group" aria-label="역할별 인원"></div>
+    <div class="row" style="margin-bottom:12px">
+      <input id="search" type="search" placeholder="이메일로 찾기" aria-label="이메일로 찾기" style="flex:1;min-width:200px">
+      <span id="countText" class="muted" style="font-size:13px"></span>
+    </div>
     <div class="table-wrap" style="max-height:none">
       <table>
         <thead><tr><th>번호</th><th>이메일(계정)</th><th>역할</th><th>가입</th></tr></thead>
@@ -24,13 +30,39 @@
 </main>
 <script src="/js/common.js"></script>
 <script>
+  // 화면 표시 순서: 관제 쪽 직원 → 환자 쪽 → 관리자
+  const ROLE_ORDER = ['OPERATOR', 'PRINCIPAL_INVESTIGATOR', 'RESEARCHER', 'PATIENT', 'GUARDIAN', 'SYSTEM_ADMIN'];
+  let users = [];
+  let roleFilter = null;   // null = 전체
+
   (async function () {
     await requireRole(['SYSTEM_ADMIN']);
-    const users = await api('/api/admin/users');
-    document.getElementById('users').replaceChildren(...users.map(u => el('tr', {},
-      el('td', { class: 'mono' }, u.id), el('td', {}, u.email), el('td', {}, roleName(u.role)),
-      el('td', { class: 'mono' }, new Date(u.createdAt).toLocaleString('ko-KR')))));
+    users = await api('/api/admin/users');
+    document.getElementById('search').addEventListener('input', render);
+    render();
   })();
+
+  // 계정 수가 많지 않으므로 서버에 다시 묻지 않고, 받은 목록을 화면에서 걸러 보여 준다
+  function render() {
+    const q = document.getElementById('search').value.trim().toLowerCase();
+    const shown = users.filter(u => (!roleFilter || u.role === roleFilter) && (!q || u.email.toLowerCase().includes(q)));
+
+    const count = (role) => users.filter(u => u.role === role).length;
+    const chip = (label, role, n) => el('button', {
+      type: 'button', class: 'chip' + (roleFilter === role ? ' on' : ''), 'aria-pressed': String(roleFilter === role),
+      onclick: () => { roleFilter = roleFilter === role ? null : role; render(); },
+    }, label, el('b', {}, n));
+    document.getElementById('chips').replaceChildren(
+      chip('전체', null, users.length),
+      ...ROLE_ORDER.filter(r => count(r) > 0).map(r => chip(roleName(r), r, count(r))));
+
+    document.getElementById('countText').textContent = `${shown.length} / ${users.length}개`;
+    document.getElementById('users').replaceChildren(...(shown.length
+      ? shown.map(u => el('tr', {},
+          el('td', { class: 'mono' }, u.id), el('td', {}, u.email), el('td', {}, roleName(u.role)),
+          el('td', { class: 'mono' }, new Date(u.createdAt).toLocaleString('ko-KR'))))
+      : [el('tr', {}, el('td', { colspan: 4, class: 'muted' }, '조건에 맞는 계정이 없습니다.'))]));
+  }
 </script>
 </body>
 </html>
