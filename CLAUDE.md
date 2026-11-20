@@ -109,9 +109,10 @@ nuada-airgetlam/
   - ✅ B1-2b `gateway/GateService`에 `joinChannels()` 도우미 추가, `decisionOf()`에서 `.badChannels(...)` 저장
     - ✅ 11/20 실행 확인 완료 (`bad_channels` 칸 생성, `e` 주입 시 값 저장)
   - ✅ B1-2c `dashboard/Views.DecisionView`에 `badChannels` 목록 추가 (최근 50개에도 포함, 없으면 빈 목록) — 11/20 실행 확인 완료
-  - ⏭ B1-3 그래프 옆 새 패널에 22채널 머리 지도 (정상 초록 / 문제 빨강 / C3·Cz·C4 강조)
+  - ✅ B1-3 그래프 옆 새 패널에 22채널 머리 지도 (`dashboard.html`, `dashboard.js`의 `updateChannelMap`, `app.css`) — 11/20 실행 확인
+    - 마지막 판단 1개 기준 / 신호 정보 없으면 회색 / 문제 채널 없는 잡음(`n`·`m`)은 머리 윤곽 주황
     - 채널 목록·순서: `ai-server-python/realtime/signal_quality.py`의 `CHANNELS` (BCI IV 2a 몽타주)
-  - ⏭ B1-4 재생기에서 `e` 주입 → C3·Cz·C4가 빨갛게 바뀌는지 확인
+  - ✅ B1-4 재생기 `e`·`n`·`m` 주입 시 지도 확인 (11/20) → PR 머지 후 B2로
 - 그다음: B2 오류 주입 버튼 → 11/22 회고 (C1·C2는 실험 범위 밖, 상세: `docs/roadmap.md`)
 - 밀린 일: `docs/portfolio-log.md`에 PR #19·#20·#21 기록 (실험 노트 형식으로)
 

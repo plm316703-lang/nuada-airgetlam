@@ -35,6 +35,7 @@ const CONTROL_KO = {
   document.getElementById('btnReset').onclick = reset;
 
   setupChart();
+  setupChannelMap();
   await loadState();
   await loadPatients();
   connect();
@@ -52,6 +53,8 @@ async function loadState() {
   renderConfig(s.config);
   document.getElementById('decisions').replaceChildren();
   s.decisions.slice().reverse().forEach(d => addDecision(d, false));
+  // 서버는 최근 판단을 최신순으로 주므로 [0]이 마지막 판단 → 새로고침 직후에도 지도가 바로 채워진다
+  updateChannelMap(s.decisions[0] || null);
   errorsById.clear();
   s.errors.forEach(e => errorsById.set(e.id, e));
   renderErrors();
@@ -78,7 +81,7 @@ function connect() {
   ws.onmessage = (ev) => {
     const { type, data } = JSON.parse(ev.data);
     if (type === 'arm') { renderArm(data); if (data.sessionId === null) renderSession(null); }
-    else if (type === 'decision') { addDecision(data, true); addChartPoint(data); chart && chart.update('none'); }
+    else if (type === 'decision') { addDecision(data, true); addChartPoint(data); chart && chart.update('none'); updateChannelMap(data); }
     else if (type === 'error') { errorsById.set(data.id, data); renderErrors(); }
     else if (type === 'control') {
       addControl(data, true);
@@ -306,6 +309,86 @@ async function assign(patientId, researcherId) {
     await api(`/api/patients/${patientId}/assignments`, { method: 'POST', body: { researcherId: Number(researcherId) } });
     toast('연구자를 배정했습니다.', true);
   } catch (e) { toast(e.message); }
+}
+
+// ───────────── 채널 상태 지도 ─────────────
+// 채널 이름·순서는 재생기 ai-server-python/realtime/signal_quality.py 의 CHANNELS(BCI IV 2a 몽타주)와 같다.
+// 좌표는 정확한 10-20 측정값이 아니라 보기 좋은 근사 배치 (viewBox 220×220, 위 = 코, 왼쪽 = 왼쪽 머리).
+// 실제 머리에서도 앞-뒤 줄(FC, C, CP, P)이 대략 같은 간격이라, 줄마다 25px 간격 격자로 단순화했다.
+const CHANNEL_POS = {
+  Fz: [110, 45],
+  FC3: [60, 75], FC1: [85, 75], FCz: [110, 75], FC2: [135, 75], FC4: [160, 75],
+  C5: [35, 105], C3: [60, 105], C1: [85, 105], Cz: [110, 105], C2: [135, 105], C4: [160, 105], C6: [185, 105],
+  CP3: [60, 135], CP1: [85, 135], CPz: [110, 135], CP2: [135, 135], CP4: [160, 135],
+  P1: [85, 162], Pz: [110, 162], P2: [135, 162],
+  POz: [110, 187],
+};
+// 왼손/오른손 상상은 C3·C4(와 Cz) 근처 신호로 판별하므로 늘 테두리로 강조 (signal_quality.py MOTOR_CHANNELS와 같음)
+const MOTOR_CHANNELS = new Set(['C3', 'Cz', 'C4']);
+const channelNodes = new Map();   // 채널 이름 → <g> 요소. 매번 새로 그리지 않고 class만 바꾸려고 보관
+
+// common.js의 el()은 HTML 요소용이라, SVG 요소는 이름공간(namespace)을 지정해서 따로 만든다
+function svgEl(tag, attrs = {}, ...children) {
+  const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.entries(attrs).forEach(([k, v]) => node.setAttribute(k, v));
+  children.forEach(c => node.append(c));
+  return node;
+}
+
+function setupChannelMap() {
+  const svg = document.getElementById('chanMap');
+  svg.replaceChildren(
+    svgEl('circle', { class: 'head', cx: 110, cy: 112, r: 96 }),
+    svgEl('path', { class: 'nose', d: 'M100 18 L110 5 L120 18' }),
+    svgEl('path', { class: 'ear', d: 'M14 98 Q4 112 14 126' }),
+    svgEl('path', { class: 'ear', d: 'M206 98 Q216 112 206 126' }),
+  );
+  channelNodes.clear();
+  Object.entries(CHANNEL_POS).forEach(([name, [x, y]]) => {
+    // <title>: 마우스를 올리면 채널 이름이 뜬다 (작은 글자를 못 읽어도 확인 가능)
+    const g = svgEl('g', { class: 'ch' + (MOTOR_CHANNELS.has(name) ? ' motor' : '') },
+      svgEl('title', {}, name),
+      svgEl('circle', { cx: x, cy: y, r: 10.5 }),
+      svgEl('text', { x, y }, name));
+    channelNodes.set(name, g);
+    svg.append(g);
+  });
+}
+
+/**
+ * 마지막 판단 1개 기준으로 칠한다 (11/20 결정: 즉시 반응, 판단이 약 1초마다 오므로 깜빡임은 적음).
+ *  - 신호 정보가 없는 판단(형식 오류, 연결 끊김 등)이면 회색: "정상"이라고 말할 근거가 없기 때문
+ *  - 문제 채널 목록에 있으면 빨강, 없으면 초록
+ *  - 문제 채널은 없는데 품질이 기준 미만이거나 원인이 있으면(60Hz·근육 잡음처럼 머리 전체 문제)
+ *    점은 초록 그대로 두고 머리 윤곽만 주황으로 → "특정 채널이 아니라 전체 문제"를 그대로 보여 준다
+ */
+function updateChannelMap(d) {
+  const svg = document.getElementById('chanMap');
+  const info = document.getElementById('chanInfo');
+  const hasSignal = d && d.signalQuality !== null && d.signalQuality !== undefined;
+  const bad = new Set(hasSignal ? (d.badChannels || []) : []);
+
+  channelNodes.forEach((g, name) => {
+    g.classList.remove('ok', 'bad');
+    if (hasSignal) g.classList.add(bad.has(name) ? 'bad' : 'ok');
+  });
+
+  const wholeHead = hasSignal && bad.size === 0 && (d.signalIssue || d.signalQuality < thresholds.quality);
+  svg.classList.toggle('noise', Boolean(wholeHead));
+
+  if (!d) { info.textContent = '아직 판단이 없습니다.'; info.className = 'chan-info muted'; return; }
+  if (!hasSignal) {
+    info.textContent = `seq ${d.seq ?? '-'} · 신호 정보 없음` + (d.reason ? ` (${REASON_KO[d.reason] || d.reason})` : '');
+    info.className = 'chan-info muted';
+    return;
+  }
+  const parts = [`품질 ${fmtNum(d.signalQuality, 2)}`];
+  if (d.signalIssue) parts.push(ERROR_KO[d.signalIssue] || d.signalIssue);
+  if (bad.size) parts.push(`문제 채널 ${[...bad].join(', ')}`);
+  else if (wholeHead) parts.push('머리 전체 잡음 (특정 채널 아님)');
+  else parts.push('모든 채널 정상');
+  info.textContent = parts.join(' · ');
+  info.className = 'chan-info ' + (bad.size ? 'r-BLOCKED' : wholeHead ? 'r-HELD' : 'r-MOVE');
 }
 
 // ───────────── 그래프 ─────────────
