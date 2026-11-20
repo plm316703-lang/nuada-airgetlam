@@ -81,7 +81,7 @@ nuada-airgetlam/
 `users`(R2: 비밀번호 변경 필요·임시 비밀번호 만료 시각, R3: 실패 횟수·잠금 해제 시각), `patients`, `patient_guardians`, `researcher_assignments`, `sessions`,
 `gate_decisions`(관문 판단: MOVE/ABSTAIN/HELD/BLOCKED, 연결 id, 피험자 번호, 문제 채널 포함),
 `device_errors`(장비 오류 + RAG 안내 결과), `control_events`(정지·재개·초기화·세션),
-`login_history`(R3: 로그인 성공·실패 + 계정 발급·재발급·변경·잠금 해제 기록, 보관 방침 1년), `invitations`(R4 예정: 환자·보호자 초대 링크)
+`login_history`(R3: 로그인 성공·실패 + 계정 발급·재발급·변경·잠금 해제 기록, 보관 방침 1년), `invitations`(R4: 환자·보호자 초대 링크, 비밀값은 SHA-256 해시만, 72시간·1회용)
 
 ## 6. 내가 내린 설계 결정 (바꾸기 전에 반드시 나에게 물어볼 것)
 
@@ -127,13 +127,21 @@ nuada-airgetlam/
     `JwtService`(pwc 클레임), `SecurityConfig`(pwc 토큰엔 역할 권한을 주지 않음 → 서버가 다른 API 차단)
   - 화면: `password.html`(새), `admin.html`(계정 만들기·재발급·비밀번호 상태), `common.js`(모든 화면에 "비밀번호 변경" 버튼, 변경 대기면 이동)
   - 설정: `application.yaml`의 `account.*` (12자·72시간·10자)
-- ✅ **R3 로그인 보안** (브랜치 `feature/login-security`) — 11/20 실행 확인 (자동 로그아웃 갱신 간격 버그 발견·수정 후), 커밋·PR 전
+- ✅ **R3 로그인 보안** (PR #25 머지) — 자동 로그아웃 갱신 간격 버그를 직접 시험으로 발견·수정
   - 서버: `User`(failedLoginCount·lockedUntil), `record/LoginHistory`(login_history), `auth/LoginService`(잠금·기록),
     `AuthController`(POST /api/auth/refresh, 로그인은 LoginService로), `AccountService`(발급·재발급·변경·잠금 해제 기록, 재발급 시 잠금도 해제),
     `AdminController`(POST /users/{id}/unlock, GET /login-history)
   - 화면: `common.js`(자동 로그아웃 타이머·1분 전 경고·5분마다 증표 갱신), `dashboard.js`(세션 중 예외), `admin.html`(잠김 표시·해제·기록 표), `login.html`(자동 로그아웃 안내)
   - 설정: `security.jwt-lifetime-minutes` 30 (`JWT_LIFETIME_MINUTES`로 시험용 변경 가능), `account.max-failed-logins` 5, `account.lock-minutes` 15
-- 👉 **지금: R4 초대** — 결정 질문 중
+- ✅ **R4 초대** (브랜치 `feature/invitation`) — 11/20 실행 확인, 커밋·PR 전
+  - 서버: `user/Invitation`(invitations, 토큰은 SHA-256 해시만), `patient/InvitationService`(환자 등록·보호자 초대(신분 확인 필수)·다시 초대·수락),
+    `PatientAdminController`(POST /api/patients, /{id}/guardians, /invitations/{userId}), `InvitationController`(로그인 전 preview·accept),
+    `SecurityConfig`(초대 API permitAll + 쿠키 무시), `LoginHistory`(INVITATION_CREATED·ACCEPTED, 칸을 varchar로)
+  - 화면: `dashboard.js`(연구책임자: 환자 등록·보호자 초대·다시 초대·초대 대기 표시), `invite.html`(새, 링크 비밀값은 # 뒤), `login.html`(가입 후 이메일 채움)
+  - 설정: `account.invite-hours` 72
+  - ⚠ 발견: Hibernate가 MySQL에서 enum을 `enum('A','B')` 칸으로 만든다 → 새 값을 추가하면 저장 실패 위험.
+    `@JdbcTypeCode(SqlTypes.VARCHAR)`를 붙이면 서버 시작 때 varchar로 바뀜(확인함). **B2에서 `control_events.type`에 값을 추가할 때도 같은 처리 필요**
+- 👉 **지금: B2 오류 주입 버튼** — 결정 질문 중
 - 그다음: R4 초대 → B2 오류 주입 버튼 → 회고 (상세: `docs/roadmap.md`)
 - 밀린 일: `docs/portfolio-log.md`의 PR #19·#20·#21 항목에서 `(보완 필요)` 칸을 내가 채우기 (#22는 작성 완료)
 
