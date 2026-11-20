@@ -78,7 +78,7 @@ nuada-airgetlam/
 
 ## 5. DB 설계 요약 (테이블 8개 → R3·R4 후 10개)
 
-`users`(R2·R3에서 비밀번호 변경 필요·실패 횟수·잠금 해제 시각 추가), `patients`, `patient_guardians`, `researcher_assignments`, `sessions`,
+`users`(R2: 비밀번호 변경 필요·임시 비밀번호 만료 시각, R3 예정: 실패 횟수·잠금 해제 시각), `patients`, `patient_guardians`, `researcher_assignments`, `sessions`,
 `gate_decisions`(관문 판단: MOVE/ABSTAIN/HELD/BLOCKED, 연결 id, 피험자 번호, 문제 채널 포함),
 `device_errors`(장비 오류 + RAG 안내 결과), `control_events`(정지·재개·초기화·세션),
 `login_history`(R3 예정: 로그인 성공·실패 기록), `invitations`(R4 예정: 환자·보호자 초대 링크)
@@ -117,12 +117,18 @@ nuada-airgetlam/
     - 마지막 판단 1개 기준 / 신호 정보 없으면 회색 / 문제 채널 없는 잡음(`n`·`m`)은 머리 윤곽 주황
     - 채널 목록·순서: `ai-server-python/realtime/signal_quality.py`의 `CHANNELS` (BCI IV 2a 몽타주)
   - ✅ B1-4 재생기 `e`·`n`·`m` 주입 시 지도 확인 (11/20)
-- ✅ **R1 역할 UI** (브랜치 `feature/role-ui`) — 11/20 확인, 커밋·푸시 완료, PR 머지 전
+- ✅ **R1 역할 UI** (PR #23 머지)
   - 서버: `patient/FriendlyStopReason`(쉬운 정지 사유), `MeController`가 `message`·`todayStops`를 보냄,
     `ControlEventRepository.findPatientEventsSince()`(그 환자 세션의 STOP만), `GateService`가 팔 정지 사유에 설명도 담음
   - 화면: `patient.html`·`guardian.html`(지금 상태 한 문장 + 오늘 멈춘 기록), `admin.html`(역할별 인원 + 이메일 찾기)
-- 👉 **지금: R2 계정 발급** — 결정 질문(Q-R2a·b·c) 답 기다리는 중
-- 그다음: R3 로그인 보안 → R4 초대 → B2 오류 주입 버튼 → 회고 (상세: `docs/roadmap.md`)
+- ✅ **R2 계정 발급** (브랜치 `feature/account-issue`) — 11/20 실행 확인, 커밋·PR 전
+  - 서버: `user/User`(mustChangePassword·tempPasswordExpiresAt), `user/PasswordRules`(임시 생성·새 비밀번호 검사),
+    `user/AccountService`(발급·재발급·변경), `AdminController`(POST 계정·재발급), `AuthController`(POST /api/auth/password, 만료 검사),
+    `JwtService`(pwc 클레임), `SecurityConfig`(pwc 토큰엔 역할 권한을 주지 않음 → 서버가 다른 API 차단)
+  - 화면: `password.html`(새), `admin.html`(계정 만들기·재발급·비밀번호 상태), `common.js`(모든 화면에 "비밀번호 변경" 버튼, 변경 대기면 이동)
+  - 설정: `application.yaml`의 `account.*` (12자·72시간·10자)
+- 👉 **지금: R3 로그인 보안** — 세부 결정 질문 중
+- 그다음: R4 초대 → B2 오류 주입 버튼 → 회고 (상세: `docs/roadmap.md`)
 - 밀린 일: `docs/portfolio-log.md`의 PR #19·#20·#21 항목에서 `(보완 필요)` 칸을 내가 채우기 (#22는 작성 완료)
 
 ## 8. 작업 규칙

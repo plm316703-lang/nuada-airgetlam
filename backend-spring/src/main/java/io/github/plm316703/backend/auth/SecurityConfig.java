@@ -8,6 +8,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -15,6 +17,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+
+import java.util.List;
 
 /**
  * 보안 설정 — 보안 5겹 중 ① 로그인(JWT+BCrypt) ② 역할별 권한.
@@ -87,13 +91,21 @@ public class SecurityConfig {
         };
     }
 
-    /** JWT의 role 클레임("OPERATOR") → 스프링 권한("ROLE_OPERATOR") */
+    /**
+     * JWT의 role 클레임("OPERATOR") → 스프링 권한("ROLE_OPERATOR").
+     * 단, 비밀번호 변경이 필요한 토큰(pwc=true)에는 역할 권한을 주지 않고 "변경 대기" 권한만 준다.
+     * → 역할이 필요한 모든 API(관제·환자·관리자)가 403으로 막히고, 로그인만 필요한
+     *   /api/auth/me·/api/auth/password 만 쓸 수 있다. 화면이 아니라 서버가 막는 것이 핵심.
+     */
     private JwtAuthenticationConverter roleConverter() {
-        JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
-        authorities.setAuthoritiesClaimName("role");
-        authorities.setAuthorityPrefix("ROLE_");
+        JwtGrantedAuthoritiesConverter roles = new JwtGrantedAuthoritiesConverter();
+        roles.setAuthoritiesClaimName("role");
+        roles.setAuthorityPrefix("ROLE_");
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(authorities);
+        converter.setJwtGrantedAuthoritiesConverter(jwt ->
+                Boolean.TRUE.equals(jwt.getClaimAsBoolean(JwtService.PASSWORD_CHANGE_CLAIM))
+                        ? List.<GrantedAuthority>of(new SimpleGrantedAuthority("PASSWORD_CHANGE_REQUIRED"))
+                        : roles.convert(jwt));
         return converter;
     }
 }

@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -56,6 +57,18 @@ public class User {
     private LocalDateTime createdAt;
 
     /**
+     * 비밀번호를 바꿔야 하는 계정인가 (관리자가 임시 비밀번호를 발급한 직후 true).
+     * true인 동안은 비밀번호 변경 외의 기능을 쓸 수 없다 → 관리자도 직원의 진짜 비밀번호를 모르게 하려는 것.
+     * @ColumnDefault: 이미 있는 계정(시연 계정 등)에 칸이 추가될 때 false로 채워 기존 로그인이 그대로 되게 함
+     */
+    @ColumnDefault("false")
+    @Column(nullable = false)
+    private boolean mustChangePassword;
+
+    /** 임시 비밀번호 만료 시각. 이 시각까지 바꾸지 않으면 임시 비밀번호로는 로그인할 수 없다 (재발급 필요) */
+    private LocalDateTime tempPasswordExpiresAt;
+
+    /**
      * 회원 생성용 생성자.
      * setter를 열어두는 대신 생성자로만 값을 넣게 해서,
      * "필수 값이 빠진 회원"이 만들어지는 것을 막음.
@@ -67,6 +80,22 @@ public class User {
         this.role = role;
     }
 
+    /** 임시 비밀번호 발급(새 계정·재발급 공통): 해시만 저장하고, 첫 로그인 때 바꾸도록 표시 */
+    public void issueTempPassword(String hash, LocalDateTime expiresAt) {
+        this.password = hash;
+        this.mustChangePassword = true;
+        this.tempPasswordExpiresAt = expiresAt;
+    }
 
+    /** 본인이 새 비밀번호로 바꿈 → 임시 상태 해제 */
+    public void changePassword(String hash) {
+        this.password = hash;
+        this.mustChangePassword = false;
+        this.tempPasswordExpiresAt = null;
+    }
 
+    /** 임시 비밀번호가 만료됐는가 (임시 상태가 아니면 항상 false) */
+    public boolean isTempPasswordExpired(LocalDateTime now) {
+        return mustChangePassword && tempPasswordExpiresAt != null && now.isAfter(tempPasswordExpiresAt);
+    }
 }
