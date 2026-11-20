@@ -1,6 +1,7 @@
 # Nuada Airgetlám
 
-> 생각으로 움직이는 로봇팔 — 뇌파로 가상 로봇팔을 조종하는 환자 중심 BCI 시스템
+> 뇌파 판별 결과를 **안전 관문**이 다시 검사해 가상 로봇팔을 움직이고, 장비 오류가 나면 그 자리에서 정지·기록하고
+> **RAG가 매뉴얼 근거로 점검 방법을 안내**하는 관제 시스템
 
 > **이 저장소는 AI 코딩 에이전트(Claude Code) 활용 실험입니다.**
 > 2026-11-20부터 구현의 대부분을 Claude Code가 맡았고, 저는 설계를 결정하고 모든 단계를 직접 실행해 확인했습니다.
@@ -15,64 +16,54 @@
 
 아일랜드 신화의 왕 **누아다(Nuada)**는 전투에서 팔을 잃고 왕위에서 물러나야 했습니다.
 그러나 은으로 만든 팔, **아르게틀람(Airgetlám, "은의 팔")**을 얻어 다시 왕좌로 돌아옵니다.
+몸을 움직일 수 없는 사람이 **생각만으로 팔을 되찾는 것**을 안전하게 지켜보는 관제층을 만드는 것이 이 프로젝트의 목표입니다.
 
-이 프로젝트는 그 이야기를 기술로 다시 쓰려는 시도입니다.
-몸을 움직일 수 없는 사람이 **생각만으로 팔을 되찾는 것**, 그리고 언젠가는
-**인간에게 없던 팔과 능력을 더하는 것**이 이 프로젝트의 비전입니다.
+## 흐름
 
-## 무엇을 만드나
+```
+[재생기: 공개 뇌파 재생 → 판별(CSP+LDA) → 신호 품질] ──WebSocket──▶ [Spring 안전 관문]
+        ▲ 오류 주입 명령(시연)                                       │ 형식·순서·신선도·신호 품질·확신도 재검사
+        └──────────────── 관제 화면 버튼 ◀──────────────────────────┤
+                                                                     ├─ 통과 → 가상 로봇팔 동작
+                                                                     └─ 차단 → 그 자리 정지 + 기록 + RAG 점검 안내
+                                                                              (자동 재개 없음, 조건 확인 후 사람이 수동 재개)
+```
 
-| 화면 | 기능 |
+## 주요 기능
+
+| 영역 | 기능 |
 |---|---|
-| 환자 화면 | 뇌파로 읽은 의도에 따라 움직이는 가상 로봇팔, AI가 제안한 행동 후보 확인 |
-| 보호자 화면 | 로봇팔 상태, 집중·피로 지표, 행동 기록, 알림 |
+| 안전 관문 | 판별기를 믿지 않고 다시 검사, 이상한 입력도 반드시 기록, 워치독(3초 정지·10초 초기화 필요) |
+| 관제 화면 | 로봇팔·확신도/신호 품질 그래프, **22채널 상태 지도**, 판단·오류·관제 동작 기록, 수동 재개·초기화, **오류 주입 버튼(시연 모드)** |
+| RAG 안내 | 점검 매뉴얼 8개(출처 포함) 검색 → Gemini 안내문, 생성 실패해도 근거는 표시. **안내만** 하고 팔은 제어하지 않음 |
+| 역할별 화면 | 관제 담당자·연구책임자·연구자 / 환자(쉬운 말 상태·오늘 기록·연구 동의) / 보호자 / 관리자 |
+| 계정·보안 | 관리자 발급 + 임시 비밀번호(첫 로그인 변경 강제), 환자·보호자 초대 링크, 5회 실패 잠금, 로그인 기록, 30분 자동 로그아웃 |
+| 개인정보 | 동의하지 않은 환자 데이터는 연구에 쓰지 않음, 철회 시 연구 데이터 삭제, 관제 담당자는 익명 코드만 |
 
-## 시스템 구조
+## 기술 스택
 
-```
-[환자 화면] ◄── [Python AI 서버] ──► [Spring 서버] ──► [보호자 화면]
- 가상 로봇팔        뇌파 디코딩            계정, 기록 저장       상태·기록 확인
- (시각 피드백)      집중·피로 계산         실시간 전송
-                   AI 행동 제안
-```
-
-- 뇌파 측정 장비 대신 **공개 뇌파 데이터셋(BCI Competition IV 2a)**을 실시간처럼 재생해 사용합니다.
-- 집중·피로 지표는 연구용 근사치이며, 의학적 진단이 아닙니다.
+- **Backend:** Java 21, Spring Boot 4, Spring Data JPA, Spring Security(JWT, HttpOnly 쿠키), WebSocket, MySQL 8
+- **AI / BCI:** Python 3.11, MNE, MOABB, scikit-learn(CSP+LDA), FastAPI, Chroma, Gemini API (RAG는 LangChain 없이 직접 구현)
+- **Frontend:** HTML, CSS, JavaScript (Canvas, SVG, Chart.js)
+- **Infra:** Docker Compose
 
 ## 폴더 구조
 
 ```
 nuada-airgetlam/
-├── backend-spring/     # Spring Boot 서버 (회원, 환자-보호자 연결, 행동 기록)
-├── ai-server-python/   # Python 서버 (뇌파 디코딩, 상태 지표, AI 행동 제안)
-├── docs/               # 설계 문서 (ERD, API 명세 등)
-└── README.md
+├── backend-spring/     # Spring: 관문, 로봇팔, 기록, 관제 화면, 인증, 환자·계정
+├── ai-server-python/   # 판별기 학습, 재생기(realtime/), RAG 서버(rag/)
+├── scripts/            # 로컬 실행 스크립트
+├── docs/               # 회고, 작업 기록, 로드맵, 메시지 규격, ERD, 실행 문서
+└── docker-compose.yml
 ```
-
-## 기술 스택
-
-- **Backend:** Java, Spring Boot, Spring Data JPA, Spring Security, MySQL
-- **AI / BCI:** Python, FastAPI, NumPy, MNE-Python, scikit-learn, LLM API
-- **Frontend:** HTML, CSS, JavaScript (Canvas 2D → 이후 Three.js 3D)
-- **Infra:** Docker, Docker Compose
-
-## 로드맵
-
-- [ ] **1단계 — 기본기:** 회원/역할, 환자-보호자 연결, 행동 기록, 2D 로봇팔(버튼 조작), 배포
-- [ ] **2단계 — BCI 도메인:** 공개 뇌파 데이터 분석, 운동 상상 분류, 뇌파로 로봇팔 조종, 집중·피로 지표
-- [ ] **3단계 — AI:** LLM 행동 후보 제안, 행동 기록 기반 RAG, 환자 확인 후 실행
-- [ ] **이후:** 3D 로봇팔, AI 자동 실행 모드, 실제 뇌파 장비 연동
 
 ## 실행하기
 
 | 방법 | 문서 | 한 줄 요약 |
 |---|---|---|
 | 로컬 (Docker 없이) | [docs/local-run.md](docs/local-run.md) | JDK 21 + MySQL 8 + Python, `scripts\run-*.ps1` 세 개 |
-| Docker Compose | [docs/deploy.md](docs/deploy.md) | `docker compose up -d --build` → http://localhost:8080 |
+| Docker Compose | [docs/deploy.md](docs/deploy.md) | `docker compose up -d --build` → http://localhost:8080 (전체 실행 확인은 진행 예정) |
 
-두 방법 모두 저장소 최상위 `.env`(견본: `.env.example`) 하나를 읽는다.
+두 방법 모두 저장소 최상위 `.env`(견본: `.env.example`) 하나를 읽습니다.
 관문 메시지 규격과 검사 순서는 [docs/message-spec.md](docs/message-spec.md).
-
-## 개발 기록
-
-진행 과정과 배운 점은 `docs/` 폴더에 기록합니다.

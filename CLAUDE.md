@@ -147,11 +147,12 @@ nuada-airgetlam/
   - 재생기: `replayer.py`의 `command_loop`(받기 스레드, 키보드와 같은 injector 사용)
   - 화면: 로봇팔 패널에 버튼 7개 (조작 역할 + 시연 모드일 때만, 12초 끊김만 확인 창)
   - 설정: `app.demo.injection-enabled` (`DEMO_INJECTION_ENABLED`, 기본 true), 규격: `docs/message-spec.md` 6장
-- 👉 **지금: 회고** (브랜치 `docs/retrospective`) — `docs/retrospective.md` 초안 작성, README 맨 위에 AI 활용 실험 안내. 공개 결정: **GitHub 공개**
+- ✅ **회고·공개 정리** (PR #28·#29·#30, 마무리 PR) — `docs/retrospective.md`, README를 실제 기능으로 갱신, `next-session.md`를 인수인계 문서로
   - 공개 전 점검: `backend-spring.zip`(커밋 58dae63, 옛 로컬 DB 설정·비밀번호 포함) 삭제 + `.gitignore`에 `*.zip`·`application-local.yaml` 추가.
     저장소는 **이미 Public**이었고 zip의 비밀번호는 MySQL **root** 것 → root 비밀번호 변경 완료 (11/20)
-- 나중에: Q-B2g 전체 실행 스크립트(`scripts/run-all.ps1`), C1 주파수 화면, C2 LSL, RAG LangChain 재구현(직접 작성)
-- ✅ `docs/portfolio-log.md`의 PR #19·#20·#21 빈칸을 당시 PR 본문 근거로 채움 (11/20). R2·R4·B2의 "확인 중 이상한 점" 칸은 기억나면 내가 보완
+  - portfolio-log PR #19~#21 빈칸을 당시 PR 본문 근거로 채움. R2·R4·B2의 "확인 중 이상한 점" 칸은 기억나면 내가 보완
+- 👉 **다음: Docker 전체 실행 확인** (상세: `docs/next-session.md` 2장)
+- 나중에: 전체 실행 스크립트(`scripts/run-all.ps1`), C1 주파수 화면, C2 LSL, RAG LangChain 재구현(직접 작성, Claude는 리뷰만)
 
 ## 8. 작업 규칙
 
