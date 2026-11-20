@@ -24,7 +24,8 @@
   커밋 이메일은 GitHub noreply 주소 (`git config --local user.email`, **다른 PC에서도 한 번 설정 필요**)
 - DB: 테이블 10개 (`CLAUDE.md` 5장). Hibernate가 MySQL에서 enum을 `enum(...)` 칸으로 만들므로,
   **enum에 새 값을 넣을 땐 `@JdbcTypeCode(SqlTypes.VARCHAR)`** (LoginHistory·ControlEvent 참고)
-- 실행: 지금은 로컬 실행(Anaconda Prompt에서 RAG·재생기 + IntelliJ Spring). Docker Compose 설정은 있지만 **끝까지 실행해 본 적 없음**
+- 실행: 지금은 로컬 실행(Anaconda Prompt에서 RAG·재생기 + IntelliJ Spring). Docker Compose는 **11/17에 전체 실행을 확인**했지만
+  (`docs/deploy.md` 7-2), 그 뒤 A1~B2 변경 후에는 다시 실행해 보지 않았음 (11/20에 처음엔 "한 번도 안 해 봤다"고 잘못 적었다가 deploy.md를 보고 바로잡음)
 
 ---
 
@@ -32,7 +33,7 @@
 
 | 순서 | 할 일 | 메모 |
 |---|---|---|
-| 1 | **Docker 전체 실행 확인** | `docker-compose.yml` 정비(시연 모드·증표 시간 설정 전달, `docker attach` 안내를 버튼 안내로), 첫 빌드, 로그인·주입 버튼까지 확인. IntelliJ Spring을 끄고 해야 8080이 안 겹침. Docker DB(3307)는 로컬 MySQL과 별개 |
+| 1 | **Docker 전체 실행 다시 확인** (진행 중, 브랜치 `chore/docker-run`, Docker 화면은 **localhost:8081**) | `docker-compose.yml` 정비(시연 모드·증표 시간 설정 전달, `docker attach` 안내를 버튼 안내로), 첫 빌드, 로그인·주입 버튼까지 확인. IntelliJ Spring을 끄고 해야 8080이 안 겹침. Docker DB(3307)는 로컬 MySQL과 별개 |
 | 2 | (선택) 전체 실행 스크립트 `scripts/run-all.ps1` | 로컬 개발용. Q-B2g에서 나중으로 미룸 |
 | 3 | C1 주파수 화면 / C2 LSL 입력 | 원래 로드맵 (`docs/roadmap.md`) |
 | 4 | RAG를 LangChain으로 다시 구현해 비교 | **내가 직접 작성, Claude는 리뷰만** — 회고 8장 "블랙박스" 대응 |
@@ -92,6 +93,8 @@
 | Q-B2e 버튼 수 | (가) 7개 전부 (e n m x s d r) | 11/20 |
 | Q-B2f 확인 창 | (가) "끊김 12초"만 확인 창 | 11/20 |
 | Q-B2g 전체 실행 스크립트 | 나중에 (B2 범위 밖) | 11/20 |
+| Docker 포트 | 다른 Docker 프로젝트 `demo`가 8080을 써서 Docker 쪽 내 PC 포트를 **8081**로 (demo는 건드리지 않음). 로컬 실행은 8080 그대로 | 11/20 |
+| Docker 계정 | 처음엔 Docker에서 새로 만들기로 했다가 **로컬 DB를 통째로 Docker DB로 옮기기**로 변경 (오늘 기록까지 함께). 옮기기 전 Docker DB는 백업 | 11/20 |
 | Q-N3 기록 커밋 | 다음 단계(새 브랜치) 커밋에 함께 넣기로 함. PR #22는 머지 완료 | 11/20 |
 | 포트폴리오 방향 | "AI 주도 개발 1주 실험"으로 정리: PR마다 실험 노트(AI가 잘한 것 / 틀린 것·내가 잡은 것 / 내가 결정한 것), 공개 가능 상태 유지, 11/22 회고 문서 | 11/20 |
 

@@ -151,7 +151,9 @@ nuada-airgetlam/
   - 공개 전 점검: `backend-spring.zip`(커밋 58dae63, 옛 로컬 DB 설정·비밀번호 포함) 삭제 + `.gitignore`에 `*.zip`·`application-local.yaml` 추가.
     저장소는 **이미 Public**이었고 zip의 비밀번호는 MySQL **root** 것 → root 비밀번호 변경 완료 (11/20)
   - portfolio-log PR #19~#21 빈칸을 당시 PR 본문 근거로 채움. R2·R4·B2의 "확인 중 이상한 점" 칸은 기억나면 내가 보완
-- 👉 **다음: Docker 전체 실행 확인** (상세: `docs/next-session.md` 2장)
+- 👉 **지금: Docker 전체 실행 다시 확인** (브랜치 `chore/docker-run`) — 11/17 확인(deploy.md 7-2) 이후 변경분 반영.
+  Compose에 `DEMO_INJECTION_ENABLED`·`JWT_LIFETIME_MINUTES` 전달, Gemini 기본값 flash-lite, 오류 주입 안내를 버튼으로.
+  **Docker 화면 주소는 `http://localhost:8081`** (다른 Docker 프로젝트 `demo`가 8080을 써서 11/20 변경, 로컬 실행은 그대로 8080)
 - 나중에: 전체 실행 스크립트(`scripts/run-all.ps1`), C1 주파수 화면, C2 LSL, RAG LangChain 재구현(직접 작성, Claude는 리뷰만)
 
 ## 8. 작업 규칙

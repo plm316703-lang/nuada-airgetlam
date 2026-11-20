@@ -20,5 +20,6 @@ COPY realtime ./realtime
 
 # 뇌파 데이터셋은 처음 실행 때 인터넷에서 내려받아 /root/mne_data 에 저장된다.
 # docker-compose.yml 에서 이 폴더를 볼륨으로 연결해 두 번째부터는 다시 받지 않는다.
-# 오류 주입 예: docker compose run --rm replayer python realtime/replayer.py --scenario electrode
+# 오류 주입은 관제 화면 버튼으로 (B2). 정해진 시점에 자동 주입하려면:
+#   docker compose run --rm replayer python realtime/replayer.py --scenario electrode
 CMD ["python", "realtime/replayer.py"]
