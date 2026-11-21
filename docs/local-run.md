@@ -116,8 +116,7 @@ cd backend-spring
 | `Access denied for user 'nuada'@'localhost'` | DB 계정 비밀번호가 `.env`와 다름 | `setup-local-db.ps1` 다시 실행 |
 | `Communications link failure` | MySQL 서비스가 꺼져 있음 | `Start-Service MySQL84` (서비스 이름은 `Get-Service MySQL*`) |
 | 재생기 `연결 거절: HTTP 401` | API 키 불일치 | 재생기와 Spring 이 같은 `.env`를 읽는지 확인 |
-| 관문이 모든 메시지를 `UNSUPPORTED_VERSION` 거부 | 예전 `step12_replay_ws.py`(규격 v1)로 보냄 | `realtime/replayer.py`(v2) 사용 |
+| 관문이 모든 메시지를 `UNSUPPORTED_VERSION` 거부 | 예전 규격 v1으로 보내는 스크립트를 씀 (옛 `step12_replay_ws.py`는 11/21 삭제) | `realtime/replayer.py`(v2) 사용 |
 | 오류 카드에 "RAG 안내 실패 503" | `GEMINI_API_KEY` 없음 | `.env`에 넣고 RAG 서버 재시작 |
 | 오류 카드에 "RAG 서버에 연결할 수 없습니다" | RAG 서버가 꺼져 있음 | 터미널 1 확인. 팔 안전에는 영향 없음 |
-| 그래프만 안 보임 | 인터넷이 없어 Chart.js를 못 받음 | 기록 표는 정상 동작 |
 | 8080 포트 사용 중 | Docker 의 backend 가 떠 있음 | `docker compose down` 후 로컬 실행 |
