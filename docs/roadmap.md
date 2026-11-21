@@ -12,7 +12,7 @@
 | 단계 | 내용 | 왜 이 순서 | 상태 |
 |---|---|---|---|
 | **① 협업 기반** | GitHub Issues + Projects 보드, 라벨, PR·이슈 템플릿, **CI**(GitHub Actions로 빌드·테스트), **브랜치 보호**, (선택) Dependabot·CONTRIBUTING | 이후 모든 작업을 "팀처럼" 이슈 → PR → 자동 검사 → 머지로 진행하려고 | 진행 중 |
-| ② LangChain RAG | A1~A6 (`ai-server-python/rag_langchain/README.md`) + **RAG 평가 세트**(오류 8종 × 질문) | 블랙박스 해소, RAG 취업 포트폴리오. CI가 내 코드를 자동 검사 | A0만 완료(커밋 전) |
+| ② LangChain RAG | A1~A6 (`ai-server-python/rag_langchain/README.md`) + **RAG 평가 세트**(오류 8종 × 질문) | 블랙박스 해소, RAG 취업 포트폴리오. CI가 내 코드를 자동 검사 | A0 완료 (PR #33) |
 | ③ 배포 | 클라우드 서버(무료 우선) + Docker Compose + **HTTPS** + 도메인, **CD**(머지하면 자동 배포), 모니터링 | 앱을 폰에 설치·푸시 알림하려면 HTTPS 공개 주소가 먼저 필요 | |
 | ④ 웹앱 (PWA) | 보호자·환자 화면 설치형 + **보호자 정지 알림(웹 푸시)**, API 문서(Swagger) | 배포 주소 위에서 "앱처럼" | |
 | ⑤ 모바일 앱 | Flutter 또는 React Native로 보호자 앱 (서버 API 사용) | ①~④가 있으면 서버는 그대로, 앱만 만들면 됨 | |
@@ -20,8 +20,8 @@
 ### ① 협업 기반 세부
 | 단계 | 내용 | 상태 |
 |---|---|---|
-| 1-0 | A0 변경을 직접 커밋·푸시·PR (지금 브랜치 정리) | |
-| 1-1 | GitHub Projects 보드 + 라벨 + 단계별 이슈 만들기 | |
+| 1-0 | A0 변경을 직접 커밋·푸시·PR (지금 브랜치 정리) | ✅ PR #33 · 중간 점검 정리 PR #34 (11/21) |
+| 1-1 | GitHub Projects 보드 + 라벨 + 단계별 이슈 만들기 | 진행 중 (11/21) |
 | 1-2 | PR 템플릿·이슈 템플릿 (`.github/`) | |
 | 1-3 | CI: GitHub Actions — Spring 테스트(MySQL 서비스 컨테이너), Python 문법 검사 | |
 | 1-4 | 브랜치 보호: main은 PR + CI 통과로만 | |

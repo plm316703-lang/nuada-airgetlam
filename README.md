@@ -3,12 +3,16 @@
 > 뇌파 판별 결과를 **안전 관문**이 다시 검사해 가상 로봇팔을 움직이고, 장비 오류가 나면 그 자리에서 정지·기록하고
 > **RAG가 매뉴얼 근거로 점검 방법을 안내**하는 관제 시스템
 
-> **이 저장소는 AI 코딩 에이전트(Claude Code) 활용 실험입니다.**
-> 2026-11-20부터 구현의 대부분을 Claude Code가 맡았고, 저는 설계를 결정하고 모든 단계를 직접 실행해 확인했습니다.
+> **이 저장소는 AI 코딩 에이전트(Claude Code) 활용 실험입니다.** 두 단계로 진행합니다.
+> 1. **1차 실험 (2026-11-20, 완료):** 구현의 대부분을 Claude Code가 맡았고, 저는 설계를 결정하고 모든 단계를 직접 실행해 확인했습니다.
+> 2. **2차 실험 (2026-11-20~, 진행 중):** 1차 회고에서 나온 "AI가 만든 코드가 블랙박스가 된다"는 문제를 줄이려고,
+>    이번에는 **제가 직접 작업**하고 Claude Code는 단계 안내·개념 설명·리뷰만 합니다 (가이드 모드).
+>    협업 기반(이슈·CI·브랜치 보호) → LangChain RAG → 배포 → PWA → 모바일 앱 순서입니다 ([`docs/roadmap.md`](docs/roadmap.md) "2단계").
+>
 > 무엇을 AI가 했고, 무엇을 제가 결정했고, AI가 틀린 것을 어떻게 잡았는지는 아래 문서에 그대로 남겼습니다.
-> - [`docs/retrospective.md`](docs/retrospective.md) — 실험 회고 (결과·소감·블랙박스 문제)
+> - [`docs/retrospective.md`](docs/retrospective.md) — 1차 실험 회고 (결과·소감·블랙박스 문제)
 > - [`docs/portfolio-log.md`](docs/portfolio-log.md) — 작업마다 문제 / AI 도움 / 내 판단 / 검증 / 실험 노트
-> - [`CLAUDE.md`](CLAUDE.md) — AI에게 준 진행 규칙과 내 설계 결정
+> - [`CLAUDE.md`](CLAUDE.md) — AI에게 준 진행 규칙(2-1장 가이드 모드 포함)과 내 설계 결정
 >
 > 의료기기가 아닌 학습용 프로토타입이며, 실제 환자 데이터 대신 공개 뇌파 데이터(BCI Competition IV 2a)를 재생합니다.
 
@@ -66,4 +70,4 @@ nuada-airgetlam/
 | Docker Compose | [docs/deploy.md](docs/deploy.md) | `docker compose up -d --build` → http://localhost:8081, 오류 주입은 관제 화면 버튼 |
 
 두 방법 모두 저장소 최상위 `.env`(견본: `.env.example`) 하나를 읽습니다.
-관문 메시지 규격과 검사 순서는 [docs/message-spec.md](docs/message-spec.md).
+관문 메시지 규격과 검사 순서는 [docs/message-spec.md](docs/message-spec.md), DB 테이블 10개와 설계 이유는 [docs/ERD.md](docs/ERD.md).

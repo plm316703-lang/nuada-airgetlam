@@ -1,6 +1,6 @@
 # 이 저장소로 돌아왔을 때 (인수인계)
 
-> 마지막 갱신: 2026-11-20 — "Claude Code 활용 첫 실험"을 마무리한 시점
+> 마지막 갱신: 2026-11-21 — 2단계 로드맵(가이드 모드) 시작, 중간 점검 정리 후
 > 여러 PC(학원·집)에서 이어서 작업하므로, 세션을 시작하면 이 파일을 먼저 읽는다.
 
 ---
@@ -9,40 +9,46 @@
 
 1. `CLAUDE.md` → 이 파일 → `docs/roadmap.md` 순서로 읽는다.
 2. 저장소 상태를 확인한다: 지금 브랜치, 작업 트리가 깨끗한지, `origin/main`과 같은지.
-   **문서에 적힌 상태도 실제로 조회해서 확인한다** (11/20 교훈: "공개 여부 미정"이라고 적혀 있었지만 실제로는 이미 Public이었다).
+   **문서에 적힌 상태도 실제로 조회해서 확인한다** (11/20 교훈: "공개 여부 미정"이라고 적혀 있었지만 실제로는 이미 Public이었다.
+   11/21에도 CLAUDE.md의 "A0 커밋 전"이 실제로는 PR #33으로 머지된 상태였다).
 3. 아래 "2. 다음에 할 일" 중 무엇을 할지 사용자에게 묻는다. 결정 질문은 2~3개씩.
-4. 진행 방식은 `CLAUDE.md` 2장 그대로: 계획 → 구현 → 사용자가 실행 확인 → 다음 단계. 커밋·PR은 요청할 때만.
+4. 진행 방식은 **가이드 모드** (`CLAUDE.md` 2-1장): 사용자가 코드·설정·GitHub·커밋·PR을 **직접** 하고,
+   Claude는 작은 단계 안내 → 개념 설명 → 이해 점검 질문 → 결과 리뷰. 막히면 힌트 → 아주 짧은 예시까지만.
+   Claude가 직접 고쳐도 되는 것은 안내 문서(CLAUDE.md·roadmap·이 파일·portfolio-log)와 사용자가 요청한 것뿐.
 5. **되돌리기 어려운 동작(머지, 원격 브랜치 삭제 등)은 앞 단계의 성공을 확인한 뒤 따로 실행한다** (PR #30 교훈).
 
 ---
 
-## 1. 지금 상태 (11/20 마무리 시점)
+## 1. 지금 상태 (11/21)
 
-- **실험 1차 완료.** 하루 동안 PR #22~#30을 머지했다. 결과·소감은 `docs/retrospective.md`, 작업별 기록은 `docs/portfolio-log.md`.
-- 만든 기능: B1 채널 상태 지도, R1 역할 화면, R2 계정 발급, R3 로그인 보안, R4 초대, B2 오류 주입 버튼 (자세한 목록은 `CLAUDE.md` 7장)
-- 저장소: **GitHub Public**, README 맨 위에 "Claude Code 활용 실험" 안내.
+- **1차 실험(Claude가 구현) 완료** — PR #22~#30. 결과·소감은 `docs/retrospective.md`, 작업별 기록은 `docs/portfolio-log.md`.
+  만든 기능: B1 채널 상태 지도, R1 역할 화면, R2 계정 발급, R3 로그인 보안, R4 초대, B2 오류 주입 버튼 (자세한 목록은 `CLAUDE.md` 7장)
+- **2차 실험(가이드 모드) 진행 중** — 2단계 로드맵 ① 협업 기반.
+  - 1-0 ✅ A0(LangChain 준비) PR #33, 중간 점검 정리 PR #34 (옛 문서 3개·옛 재생 스크립트 3개·빈 `.gitkeep` 삭제)
+  - 11/21 커밋 전 (브랜치 `docs/refresh` 예정): `docs/ERD.md` v2(실제 테이블 10개 기준으로 다시 씀), `roadmap.md` 상태 갱신, 이 파일
+- 저장소: **GitHub Public**, README 맨 위에 "Claude Code 활용 실험" 안내. 원격 브랜치는 `main` 하나, 태그·릴리스 없음.
   커밋 이메일은 GitHub noreply 주소 (`git config --local user.email`, **다른 PC에서도 한 번 설정 필요**)
-- DB: 테이블 10개 (`CLAUDE.md` 5장). Hibernate가 MySQL에서 enum을 `enum(...)` 칸으로 만들므로,
+- DB: 테이블 10개 (`docs/ERD.md`). Hibernate가 MySQL에서 enum을 `enum(...)` 칸으로 만들므로,
   **enum에 새 값을 넣을 땐 `@JdbcTypeCode(SqlTypes.VARCHAR)`** (LoginHistory·ControlEvent 참고)
-- 실행: 지금은 로컬 실행(Anaconda Prompt에서 RAG·재생기 + IntelliJ Spring). Docker Compose는 **11/17에 전체 실행을 확인**했지만
-  (`docs/deploy.md` 7-2), 그 뒤 A1~B2 변경 후에는 다시 실행해 보지 않았음 (11/20에 처음엔 "한 번도 안 해 봤다"고 잘못 적었다가 deploy.md를 보고 바로잡음)
+- 실행: 개발은 로컬(Anaconda Prompt에서 RAG·재생기 + IntelliJ Spring, 화면 8080),
+  시연은 Docker Compose(화면 **8081**, PR #32에서 A1~B2 반영 후 전체 실행 다시 확인. `docs/deploy.md` 7-3)
+- 이 PC에는 `gh`(GitHub CLI)가 없음 → Issue·PR·저장소 설정은 GitHub 웹에서 확인
 
 ---
 
 ## 2. 다음에 할 일
 
-> **11/20 오후 갱신: 2단계 로드맵으로 바뀜** — 순서와 상태는 `docs/roadmap.md` "2단계 로드맵"을 따른다 (가이드 모드).
-> 아래 표는 그 전에 적은 후보 목록이다.
+> 순서와 상태의 기준은 `docs/roadmap.md` "2단계 로드맵". 아래는 바로 다음 몇 걸음.
 
 | 순서 | 할 일 | 메모 |
 |---|---|---|
-| 1 | **Docker 전체 실행 다시 확인** (진행 중, 브랜치 `chore/docker-run`, Docker 화면은 **localhost:8081**) | `docker-compose.yml` 정비(시연 모드·증표 시간 설정 전달, `docker attach` 안내를 버튼 안내로), 첫 빌드, 로그인·주입 버튼까지 확인. IntelliJ Spring을 끄고 해야 8080이 안 겹침. Docker DB(3307)는 로컬 MySQL과 별개 |
-| 2 | (선택) 전체 실행 스크립트 `scripts/run-all.ps1` | 로컬 개발용. Q-B2g에서 나중으로 미룸 |
-| 3 | C1 주파수 화면 / C2 LSL 입력 | 원래 로드맵 (`docs/roadmap.md`) |
-| 4 | RAG를 LangChain으로 다시 구현해 비교 | **내가 직접 작성, Claude는 리뷰만** — 회고 8장 "블랙박스" 대응 |
+| 1 | **`docs/refresh` 브랜치로 커밋·PR** (ERD v2, roadmap, 이 파일, CLAUDE.md, README) | README 실험 안내에 2차 실험(가이드 모드)·2단계 로드맵 추가, ERD 링크 추가 |
+| 2 | GitHub **About 소개 문구·Topics** 정리 (직접, 저장소 화면 About 옆 톱니바퀴) | 지금 소개 "생각으로 움직이는 로봇팔 — 환자 중심 BCI 시스템"은 옛 방향. README 첫 줄(안전 관문 + RAG 관제)과 맞추기 |
+| 3 | **1-1 라벨** → Projects 보드 → 단계별 이슈 (Milestone 쓸지 결정) | 라벨 제안: 종류 `bug`·`enhancement`·`documentation` + 분야 `spring`·`python`·`rag`·`frontend`·`infra` (사용자 결정 대기) |
+| 4 | 1-2 PR·이슈 템플릿 → 1-3 CI → 1-4 브랜치 보호 | `roadmap.md` "① 협업 기반 세부" |
+| 보류 | `ai-server-python/realtime/step12_reject_test.py` | 관문 거부 시험. 1-3 CI 때 자동 테스트로 옮길지 결정 |
+| 나중에 | 전체 실행 스크립트 `scripts/run-all.ps1`, C1 주파수 화면, C2 LSL | 실험 범위 밖 |
 | — | (선택) R2·R4·B2 portfolio-log의 "확인 중 이상한 점" 칸 | 기억나면 직접 보완 |
-
-다음 주(11/23~)에는 별도 앱을 만들 예정. 그 앱에서는 처음부터 "블랙박스로 둘 부분과 직접 볼 부분"을 정하고 시작하기 (회고 8장 4번).
 
 ---
 
@@ -104,6 +110,8 @@
 | Docker 계정 | 처음엔 Docker에서 새로 만들기로 했다가 **로컬 DB를 통째로 Docker DB로 옮기기**로 변경 (오늘 기록까지 함께). 옮기기 전 Docker DB는 백업 | 11/20 |
 | Q-N3 기록 커밋 | 다음 단계(새 브랜치) 커밋에 함께 넣기로 함. PR #22는 머지 완료 | 11/20 |
 | 포트폴리오 방향 | "AI 주도 개발 1주 실험"으로 정리: PR마다 실험 노트(AI가 잘한 것 / 틀린 것·내가 잡은 것 / 내가 결정한 것), 공개 가능 상태 유지, 11/22 회고 문서 | 11/20 |
+| 중간 점검 정리 | 옛 문서 3개(learning-log·project-overview·service-plan)는 archive로 옮기지 않고 **삭제**. 옛 재생 스크립트 3개·`.gitkeep` 삭제, `step12_reject_test.py`는 보류, 판별기 step1~9는 유지. 삭제는 요청해서 Claude가, 커밋·PR은 직접 (PR #34) | 11/21 |
+| ERD | 10/28 v1을 고치지 않고 **실제 테이블 10개 기준으로 다시 쓰기** (v1과 달라진 점은 문서 안에 표로) | 11/21 |
 
 ---
 
@@ -122,4 +130,4 @@
 
 1. `docs/roadmap.md` 상태 칸, `CLAUDE.md` 7장, 이 파일 1·2장을 갱신한다
 2. 새 결정은 이 파일 3장 표에, 작업 기록은 `docs/portfolio-log.md`에 남긴다 (실험 노트 포함)
-3. 커밋·푸시는 사용자가 요청할 때만 한다
+3. 커밋·푸시·PR은 사용자가 직접 한다 (가이드 모드). Claude는 커밋 메시지·PR 본문 초안만
