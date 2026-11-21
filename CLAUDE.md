@@ -168,7 +168,7 @@ nuada-airgetlam/
   - 순서: **① 협업 기반**(Issues·Projects, PR 템플릿, CI, 브랜치 보호) → ② LangChain RAG + 평가 세트 → ③ 배포(무료 우선) + CD + 모니터링 → ④ PWA(보호자 알림) → ⑤ 모바일 앱
   - 다음 주 "별도 앱" 계획은 **이 프로젝트를 앱으로 만드는 것(④·⑤)으로 변경**
   - ✅ A0(LangChain 준비) 머지 (PR #33): `rag_langchain/README.md`·`requirements.txt`, `.venv`는 로컬에만(무시됨)
-  - ✅ 중간 점검 정리 (11/21, 커밋 전): 옛 문서 3개(learning-log·project-overview·service-plan), 옛 재생 스크립트(step10·step12_replay_ws·step12_connect_test), 빈 `.gitkeep` 삭제.
+  - ✅ 중간 점검 정리 (11/21, PR #34 머지): 옛 문서 3개(learning-log·project-overview·service-plan), 옛 재생 스크립트(step10·step12_replay_ws·step12_connect_test), 빈 `.gitkeep` 삭제.
     `step12_reject_test.py`는 CI 자동 테스트 재료로 보류
     - 위치 `ai-server-python/rag_langchain/`, 별도 서버 포트 8001, `/guide` 응답 모양은 기존과 같게, 별도 가상환경
     - 단계: A1 개념 → A2 자르기·색인 → A3 검색 비교 → A4 프롬프트·생성 → A5 실패 처리·API → A6 비교표
