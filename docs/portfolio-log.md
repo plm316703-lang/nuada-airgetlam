@@ -624,6 +624,30 @@ Python 재생기 ─WebSocket─▶ 문지기(비밀키) ─▶ 핸들러 ─▶
 
 ## 8. Git·협업 관리
 
+### 중간 점검: 저장소·로컬 정리 / 2026-11-21
+- 문제: 2단계 로드맵에 들어가기 전에 저장소에 올라간 파일(160개)과 로컬 파일 중 지금은 쓰지 않는 것이 섞여 있음
+- AI 도움: Claude Code — 읽기 전용 조회로 후보 찾기(다른 파일에서 참조되는지, 마지막 수정일, 대체한 파일이 있는지),
+  "지워도 되는 것 / 판단이 필요한 것 / 유지"로 나눠 제안, 내가 고른 삭제와 안내 문서 수정 실행, 스테이징·커밋 순서 안내
+- 내 판단과 행동:
+    - 옛 문서 3개(learning-log·project-overview·service-plan)는 archive 폴더로 옮기지 않고 **삭제**로 결정 (Git 이력에는 남음)
+    - 옛 재생 스크립트 3개(step10_replay·step12_replay_ws·step12_connect_test)와 빈 `.gitkeep` 삭제
+    - `step12_reject_test.py`는 CI 자동 테스트 재료로 **보류**, 판별기 학습 단계 스크립트(step1~9)는 모델의 근거라서 **유지**
+    - 로컬: 다시 만들어지는 `build`·`__pycache__`·`HELP.md`만 삭제, `.venv`(502MB)·`.chroma`·`.env`·`mne_data`는 유지
+    - 새 브랜치 `chore/cleanup`에서 `git rm`·`git add`로 파일을 지정해 커밋·푸시
+- 검증:
+    - 지운 파일 이름으로 저장소 전체 검색 → 남은 참조는 portfolio-log(당시 기록)와 local-run 문제 해결 표 1줄(삭제 사실을 적어 고침)뿐
+    - GitHub 원격 브랜치는 `main` 하나, 태그 없음 (`git ls-remote`)
+    - `git status`: 삭제 7개 + 수정 2개(CLAUDE.md, local-run.md)만 커밋됨 (커밋 cbf99c6)
+- 증거: 브랜치 `chore/cleanup`, 커밋 cbf99c6
+- 실험 노트:
+    - AI가 잘한 것: 지우기 전에 참조를 검색해 `local-run.md`가 지울 스크립트를 가리키는 것과, A1(Chart.js 저장소 포함) 이후 필요 없어진
+      "그래프만 안 보임" 문제 해결 줄을 함께 찾음 / CLAUDE.md의 "A0 커밋 전" 표시가 실제(PR #33 머지)와 다른 것을 발견
+    - 가이드 모드와의 관계: 원래 파일 변경은 내가 하지만, 이번 삭제는 내가 요청해서 Claude가 실행. 커밋·푸시·PR은 내가 함
+    - 내가 결정한 것: 문서는 보관 대신 삭제, reject_test 보류
+- 한계: 이 PC에 `gh`가 없어 GitHub의 열린 Issue·PR과 저장소 설정(머지 후 브랜치 자동 삭제)은 확인 못 함 /
+  예전에 지운 `backend-spring.zip`은 커밋 기록(58dae63)에 남아 있음 (root 비밀번호를 바꿨으므로 기록 재작성은 하지 않음)
+- 상태: 검증
+
 ### 미커밋 관문 기록 작업과 최신 main 병합 (PR #16) / 2026-11-19
 - 문제: 며칠 전 로컬 브랜치(feature/gate-decisions-db)에 커밋하지 않은 gateway/GateDecision 외 3개 파일이 있었고,
   어제 main에 들어간 PR #14에는 같은 이름의 record/GateDecision이 이미 있음. 그대로 합쳐도 되는지 확인 필요
