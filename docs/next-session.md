@@ -117,7 +117,7 @@
 | 이슈 본문 초안 | 가이드 모드 예외: 사용자 요청으로 #42~#44 본문은 **Claude가 초안**, 사용자가 읽고 붙임 (#41은 직접 작성). ⚠ 결정 3개는 각 이슈에서 직접: Python 검사 도구, `step12_reject_test.py`, 승인 리뷰 필수 여부 | 11/25 |
 | 템플릿 파일 | 가이드 모드 예외 2번째: 사용자 요청("다 작성해줘")으로 `.github/` 템플릿 3개를 **Claude가 작성**. 사용자는 폴더·빈 파일을 만들었고, PR 템플릿이 `ISSUE_TEMPLATE/` 안에 있던 것을 Claude가 `.github/` 바로 아래로 옮김. 작성 요령은 설명으로 대신 | 11/25 |
 | #42 CI 결정 | Python 검사는 **compileall**(설치 없이 문법만). `step12_reject_test.py`는 서버가 떠 있어야 하고 자동 판정이 없어 **이번 CI에서 제외** → 나중에 Java 테스트로 옮기는 이슈를 따로 만듦 | 11/25 |
-| CI 서비스·설정값 | 가이드 모드 예외 3번째: 사용자 요청으로 `ci.yml`의 `services`(MySQL **8.4**, docker-compose와 같게)·`env`(가짜 값)를 Claude가 작성. 뼈대·checkout·setup-java·테스트 스텝·실행 권한 해결은 직접 | 11/25 |
+| CI 서비스·설정값 | 가이드 모드 예외 3·4번째: Python 잡(compileall)도 사용자 요청으로 Claude가 작성. 사용자 요청으로 `ci.yml`의 `services`(MySQL **8.4**, docker-compose와 같게)·`env`(가짜 값)를 Claude가 작성. 뼈대·checkout·setup-java·테스트 스텝·실행 권한 해결은 직접 | 11/25 |
 
 ---
 

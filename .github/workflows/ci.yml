@@ -54,3 +54,23 @@ jobs:
       - name: 테스트 실행
         working-directory: backend-spring
         run: ./gradlew test
+
+  # Python 쪽은 자동 테스트가 없어서 "문법이 깨졌는지"만 검사 (내 결정: compileall, 설치 불필요)
+  # 실행하지 않고 읽기만 하므로 MySQL·설정값이 필요 없음
+  python:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 잡마다 러너가 따로라 코드도 다시 받아와야 함
+      - name: 코드 받아오기
+        uses: actions/checkout@v7
+
+      # 로컬 개발 환경(conda nuada-bci)과 같은 3.11
+      - name: Python 3.11 설치
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      # -q: 문제 있는 파일만 출력. 문법 오류가 하나라도 있으면 실패(빨간불)
+      - name: 문법 검사
+        run: python -m compileall -q ai-server-python
