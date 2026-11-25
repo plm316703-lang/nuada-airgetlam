@@ -22,8 +22,8 @@
 |---|---|---|
 | 1-0 | A0 변경을 직접 커밋·푸시·PR (지금 브랜치 정리) | ✅ PR #33 · 중간 점검 정리 PR #34 (11/21) |
 | 1-1 | GitHub Projects 보드 + 라벨 + 단계별 이슈 만들기 | ✅ 분야 라벨 5개, Milestone 5개, 보드 `Nuada 2단계`(Public, 자동화 켬), 이슈 #41~#44 (11/25) |
-| 1-2 | PR 템플릿·이슈 템플릿 (`.github/`) | |
-| 1-3 | CI: GitHub Actions — Spring 테스트(MySQL 서비스 컨테이너), Python 문법 검사 | |
+| 1-2 | PR 템플릿·이슈 템플릿 (`.github/`) | ✅ PR #45 (이슈 #41, 11/25) |
+| 1-3 | CI: GitHub Actions — Spring 테스트(MySQL 서비스 컨테이너), Python 문법 검사 | 다음 (이슈 #42) |
 | 1-4 | 브랜치 보호: main은 PR + CI 통과로만 | |
 | 1-5 | (선택) Dependabot, 시크릿 검사 확인, `CONTRIBUTING.md` | |
 

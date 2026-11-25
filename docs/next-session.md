@@ -1,6 +1,6 @@
 # 이 저장소로 돌아왔을 때 (인수인계)
 
-> 마지막 갱신: 2026-11-21 — 2단계 로드맵(가이드 모드) 시작, 중간 점검 정리 후
+> 마지막 갱신: 2026-11-25 — ① 협업 기반 1-1(라벨·Milestone·보드·이슈)·1-2(템플릿, PR #45) 완료
 > 여러 PC(학원·집)에서 이어서 작업하므로, 세션을 시작하면 이 파일을 먼저 읽는다.
 
 ---
@@ -42,10 +42,11 @@
 
 | 순서 | 할 일 | 메모 |
 |---|---|---|
-| 1 | **`docs/refresh` 브랜치로 커밋·PR** (ERD v2, roadmap, 이 파일, CLAUDE.md, README) | README 실험 안내에 2차 실험(가이드 모드)·2단계 로드맵 추가, ERD 링크 추가 |
-| 2 | GitHub **About 소개 문구·Topics** 정리 (직접, 저장소 화면 About 옆 톱니바퀴) | 지금 소개 "생각으로 움직이는 로봇팔 — 환자 중심 BCI 시스템"은 옛 방향. README 첫 줄(안전 관문 + RAG 관제)과 맞추기 |
-| 3 | **1-1 라벨** → Projects 보드 → 단계별 이슈 (Milestone 쓸지 결정) | 라벨 제안: 종류 `bug`·`enhancement`·`documentation` + 분야 `spring`·`python`·`rag`·`frontend`·`infra` (사용자 결정 대기) |
-| 4 | 1-2 PR·이슈 템플릿 → 1-3 CI → 1-4 브랜치 보호 | `roadmap.md` "① 협업 기반 세부" |
+| 1 | **#42 CI** (1-3) | 시작 전 결정: Python 검사 도구(`compileall` / ruff), `step12_reject_test.py`를 자동 테스트로 옮길지. 이번 기록(portfolio-log·roadmap·이 파일)도 이 브랜치에 함께 커밋 |
+| 2 | #43 브랜치 보호 (1-4) | #42 다음. "승인 리뷰 필수"는 혼자라 넣지 않는 쪽으로 검토 |
+| 3 | (선택) #44 Dependabot·시크릿 검사·CONTRIBUTING (1-5) | |
+| 정리 | `docs/study/` (주말 GPT 공부 프롬프트) | **저장소에 넣기로 결정 (11/25)** → 다음 커밋에 포함 |
+| 선택 | 보드에 PR 카드도 올라옴 → Auto-add 필터를 `is:issue`로 바꿀지 | 분야 라벨 색이 기존 라벨과 비슷한 것도 선택 사항 |
 | 보류 | `ai-server-python/realtime/step12_reject_test.py` | 관문 거부 시험. 1-3 CI 때 자동 테스트로 옮길지 결정 |
 | 나중에 | 전체 실행 스크립트 `scripts/run-all.ps1`, C1 주파수 화면, C2 LSL | 실험 범위 밖 |
 | — | (선택) R2·R4·B2 portfolio-log의 "확인 중 이상한 점" 칸 | 기억나면 직접 보완 |
@@ -115,6 +116,7 @@
 | 1-1 라벨 | 종류는 기본 `bug`·`enhancement`·`documentation` 그대로 + 분야 `spring`·`python`·`rag`·`frontend`·`infra` 새로 만듦. 안 쓰는 기본 라벨은 **그대로 둠**. Milestone은 **①~⑤ 5개** 사용 | 11/25 |
 | 이슈 본문 초안 | 가이드 모드 예외: 사용자 요청으로 #42~#44 본문은 **Claude가 초안**, 사용자가 읽고 붙임 (#41은 직접 작성). ⚠ 결정 3개는 각 이슈에서 직접: Python 검사 도구, `step12_reject_test.py`, 승인 리뷰 필수 여부 | 11/25 |
 | 템플릿 파일 | 가이드 모드 예외 2번째: 사용자 요청("다 작성해줘")으로 `.github/` 템플릿 3개를 **Claude가 작성**. 사용자는 폴더·빈 파일을 만들었고, PR 템플릿이 `ISSUE_TEMPLATE/` 안에 있던 것을 Claude가 `.github/` 바로 아래로 옮김. 작성 요령은 설명으로 대신 | 11/25 |
+| #42 CI 결정 | Python 검사는 **compileall**(설치 없이 문법만). `step12_reject_test.py`는 서버가 떠 있어야 하고 자동 판정이 없어 **이번 CI에서 제외** → 나중에 Java 테스트로 옮기는 이슈를 따로 만듦 | 11/25 |
 
 ---
 
