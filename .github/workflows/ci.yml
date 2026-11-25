@@ -22,7 +22,8 @@ jobs:
           java-version: '21'
 
 
-    #5. gradlew 실행 권한 주기
+      #5. gradlew 실행 권한 주기
+      #  -> gradlew 실행 권한은 Git에 기록함(100755)이라 별도 스텝 불필요
 
       # gradlew가 backend-spring 안에 있으므로 그 폴더에서 실행
       - name: 테스트 실행
