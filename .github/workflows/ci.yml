@@ -7,8 +7,33 @@ jobs:
   spring:
     runs-on: ubuntu-latest
 
-    # services:  # 테스트가 실제 MySQL에 접속하므로 잡 옆에 MySQL을 띄움. 잡이 끝나면 버려져 초기화가 필요 없음
-    # env:       # .env가 없으므로 테스트에 필요한 설정값을 줌. 공개 저장소라 노출돼도 상관없는 가짜 값만
+    # 테스트가 실제 MySQL에 접속하므로 잡 옆에 MySQL을 띄움. 잡이 끝나면 버려져 초기화가 필요 없음
+    services:
+      mysql:
+        # docker-compose.yml(시연·배포)과 같은 버전으로 맞춤
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: nuada_ci
+          MYSQL_USER: ci_user
+          MYSQL_PASSWORD: ci_test_password
+          MYSQL_ROOT_PASSWORD: ci_test_root_password
+        ports:
+          - 3306:3306
+        # MySQL이 접속을 받을 준비가 될 때까지 스텝 시작을 기다리게 함 (부팅 중에 테스트가 붙으면 실패)
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    # .env가 없으므로 application.yaml이 읽는 이름 그대로 값을 줌.
+    # 공개 저장소라 누구나 보지만, 이 러너 안에서만 쓰이고 사라지는 가짜 값이라 노출돼도 피해가 없음
+    env:
+      MYSQL_DATABASE: nuada_ci          # 위 services의 MySQL 값과 같아야 접속됨
+      MYSQL_USER: ci_user
+      MYSQL_PASSWORD: ci_test_password
+      JWT_SECRET: ci-test-jwt-secret-not-for-production-0123456789   # 32자 이상이어야 서버가 시작됨
+      GATEWAY_API_KEY: ci-test-gateway-key
 
     steps:
         # 러너는 빈 컴퓨터라 GitHub에 push된 커밋을 받아와야 함
