@@ -1,0 +1,30 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  spring:
+    runs-on: ubuntu-latest
+
+    # services:  # 테스트가 실제 MySQL에 접속하므로 잡 옆에 MySQL을 띄움. 잡이 끝나면 버려져 초기화가 필요 없음
+    # env:       # .env가 없으므로 테스트에 필요한 설정값을 줌. 공개 저장소라 노출돼도 상관없는 가짜 값만
+
+    steps:
+        # 러너는 빈 컴퓨터라 GitHub에 push된 커밋을 받아와야 함
+      - name: 코드 받아오기
+        uses: actions/checkout@v7
+        # build.gradle이 Java 21을 요구함
+      - name: Java 21 설치
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+
+    #5. gradlew 실행 권한 주기
+
+      # gradlew가 backend-spring 안에 있으므로 그 폴더에서 실행
+      - name: 테스트 실행
+        working-directory: backend-spring
+        run: ./gradlew test
