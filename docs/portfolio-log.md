@@ -624,6 +624,19 @@ Python 재생기 ─WebSocket─▶ 문지기(비밀키) ─▶ 핸들러 ─▶
 
 ## 8. Git·협업 관리
 
+### ① 협업 기반 1-5: 시크릿 검사 확인 (이슈 #44, 범위 축소) / 2026-11-26
+- 문제: 공개 전 zip에 DB 비밀번호가 들어 있던 일이 있었음. 공개 저장소에 비밀 값이 올라가는 것을 GitHub가 막아 주는지 몰랐음
+- AI 도움: Claude Code (가이드 모드) — #44의 세 가지(시크릿 검사·Dependabot·CONTRIBUTING)를 무게별로 비교, Secret scanning(사후 알림)과 Push protection(push 순간 거부) 차이 설명, 설정 화면에서 위치 안내
+- 내 판단과 행동:
+    - 결정: **시크릿 검사 확인만** 하고 ② LangChain RAG로. Dependabot·CONTRIBUTING은 보류
+    - Settings → Advanced Security 맨 아래에서 확인: Secret Protection 켜짐(Disable 버튼이 보임), Push protection **On** — 공개 저장소 기본값
+    - 이해 점검: `.env`의 `GATEWAY_API_KEY`를 push하면 막아 주나? → **못 막는다, 직접 만든 문자열이라 GitHub가 모르는 형식** (정답)
+- 검증: 설정 화면 캡처로 확인. 진짜 키로 차단 시험은 하지 않음
+- 실험 노트: 처음엔 설정이 어디 있는지 못 찾음(긴 화면의 맨 아래). "끄기(Disable) 버튼이 보이면 켜진 상태"라는 읽는 법을 배움
+- 한계: GitHub가 아는 형식(GitHub·Google·AWS 토큰 등)만 잡음 → `JWT_SECRET`·DB 비밀번호·`GATEWAY_API_KEY`는 여전히 `.gitignore`와 `git status` 습관이 방어선 /
+  Dependency graph·Dependabot alerts는 Off 상태로 둠
+- 상태: 확인 (범위 축소)
+
 ### ① 협업 기반 1-4: main 브랜치 보호 (이슈 #43, 시험 PR #48) / 2026-11-26
 - 문제: CI가 빨간불이어도 Merge 버튼은 그대로 눌림(CI는 보여 주기만 함). main에 직접 push하는 것도 막을 장치가 없음 (PR #30에서 확인 없이 진행한 실수가 있었음)
 - AI 도움: Claude Code (가이드 모드) — Ruleset 설정 순서 안내, 개념 설명(Bypass 목록, 필수 검사는 "지정한 것만" 봄, `-d`와 `-D`),

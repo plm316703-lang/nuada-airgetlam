@@ -25,7 +25,7 @@
 | 1-2 | PR 템플릿·이슈 템플릿 (`.github/`) | ✅ PR #45 (이슈 #41, 11/25) |
 | 1-3 | CI: GitHub Actions — Spring 테스트(MySQL 서비스 컨테이너), Python 문법 검사 | ✅ PR #46 (이슈 #42, 11/25) — spring·python 잡 |
 | 1-4 | 브랜치 보호: main은 PR + CI 통과로만 | ✅ Ruleset `main 보호` (이슈 #43, 11/26) — 직접 push 거부·CI 실패 PR 머지 차단(시험 PR #48) 확인 |
-| 1-5 | (선택) Dependabot, 시크릿 검사 확인, `CONTRIBUTING.md` | |
+| 1-5 | (선택) Dependabot, 시크릿 검사 확인, `CONTRIBUTING.md` | ◐ 시크릿 검사만 (이슈 #44, 11/26) — Secret Protection·Push protection 켜져 있음 확인. Dependabot·CONTRIBUTING은 보류 |
 
 ## 11/20 방향 변경 (내 결정)
 - **발표 없음.** 이 프로젝트는 "Claude Code로 프로젝트가 어떻게 만들어지는지" 보는 첫 실험
