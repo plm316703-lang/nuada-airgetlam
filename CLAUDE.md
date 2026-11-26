@@ -167,6 +167,8 @@ nuada-airgetlam/
 - 👉 **지금: 2단계 로드맵 (가이드 모드 2-1장, 상세 `docs/roadmap.md` "2단계")**
   - 순서: **① 협업 기반**(Issues·Projects, PR 템플릿, CI, 브랜치 보호) → ② LangChain RAG + 평가 세트 → ③ 배포(무료 우선) + CD + 모니터링 → ④ PWA(보호자 알림) → ⑤ 모바일 앱
   - 다음 주 "별도 앱" 계획은 **이 프로젝트를 앱으로 만드는 것(④·⑤)으로 변경**
+  - ✅ ① 1-1 라벨·Milestone·보드 `Nuada 2단계`·이슈 #41~#44, 1-2 템플릿(PR #45), 1-3 CI `spring`·`python` 잡(PR #46), 1-4 브랜치 보호(이슈 #43, 11/26)
+    - ⚠ **main은 Ruleset으로 보호 중**: 직접 push 불가, PR + 필수 검사 `spring`·`python` 통과해야 머지. 남은 것: (선택) 1-5 #44
   - ✅ A0(LangChain 준비) 머지 (PR #33): `rag_langchain/README.md`·`requirements.txt`, `.venv`는 로컬에만(무시됨)
   - ✅ 중간 점검 정리 (11/21, PR #34 머지): 옛 문서 3개(learning-log·project-overview·service-plan), 옛 재생 스크립트(step10·step12_replay_ws·step12_connect_test), 빈 `.gitkeep` 삭제.
     `step12_reject_test.py`는 CI 자동 테스트 재료로 보류

@@ -624,6 +624,33 @@ Python 재생기 ─WebSocket─▶ 문지기(비밀키) ─▶ 핸들러 ─▶
 
 ## 8. Git·협업 관리
 
+### ① 협업 기반 1-4: main 브랜치 보호 (이슈 #43, 시험 PR #48) / 2026-11-26
+- 문제: CI가 빨간불이어도 Merge 버튼은 그대로 눌림(CI는 보여 주기만 함). main에 직접 push하는 것도 막을 장치가 없음 (PR #30에서 확인 없이 진행한 실수가 있었음)
+- AI 도움: Claude Code (가이드 모드) — Ruleset 설정 순서 안내, 개념 설명(Bypass 목록, 필수 검사는 "지정한 것만" 봄, `-d`와 `-D`),
+  "혼자인데 필요한가" 질문에 켜는 이유·안 켜는 이유를 나눠 설명, 공개 API(`/rules/branches/main`)로 실제 적용된 규칙 조회
+- 내 판단과 행동:
+    - "혼자 하는 프로젝트에 굳이 필요한가"를 먼저 물어보고, 켜는 쪽으로 결정 (바쁠 때의 나를 막는 장치 + CI가 실제로 막게 하려고)
+    - Settings → Rules → Rulesets에서 `main 보호`를 직접 만듦: 삭제 금지, 강제 push 금지, PR 필수, 필수 검사 `spring`·`python`
+    - 결정: 승인 리뷰 **0명**(내 PR을 내가 승인할 수 없어서), "up to date" 요구는 **끔**, Bypass 목록은 **비움**(관리자인 나도 막히게)
+    - 이해 점검: Bypass에 나를 넣으면 규칙이 막는 사람이 없어짐 / `python`을 빠뜨리면 Python 문법이 깨진 PR도 머지됨 → 잡을 추가·이름 변경하면 Ruleset도 같이 고쳐야 함
+- 검증:
+    1. 완료 조건 ①: main에서 빈 커밋(`--allow-empty`)을 직접 push → `GH013: Repository rule violations`,
+       `Changes must be made through a pull request`, `2 of 2 required status checks are expected`로 **거부**. `git reset --soft origin/main`으로 되돌림
+    2. 완료 조건 ②: `ai-server-python/ci_block_test.py`에 일부러 문법 오류(`def broken(:`) → Draft PR #48.
+       `CI / python` **7초 만에 실패**, `CI / spring` 통과, 두 검사 모두 **Required** 표시.
+       Draft만 풀었을 때 막힌 것과 구분하려고 Ready for review로 바꾼 뒤에도 **Merge 버튼 비활성**, Bypass 메뉴 없음
+    3. 정리: PR #48은 머지 없이 Close, 원격·로컬 브랜치 삭제(머지 안 된 브랜치라 `-D`), #43은 PR이 없어 댓글을 달고 직접 Close → 보드 Done
+- 증거: 이슈 #43(닫으며 단 댓글), PR #48(Closed), push 거부 출력, PR #48 머지 영역 캡처, `/rules/branches/main` 조회 결과
+- 실험 노트:
+    - 내가 결정한 것: 보호를 켤지 자체를 먼저 따져 봄 / 승인 0명·up to date 끔·Bypass 비움 / 완료 조건 ②를 생략하지 않고 직접 시험
+    - 덤으로 확인한 것: 지금까지 초록불만 봤던 python 잡이 문법 오류를 실제로 잡아냄
+    - 순서 사고: PR #46을 초록불 확인 직후 머지해서 문서 3개가 커밋 전으로 남음 → 머지된 `feature/ci`에 이어 쓰지 않고
+      최신 main에서 `docs/ci-record`를 새로 만들어 PR #47로 올림 (머지 결과·main CI는 정상이었음)
+    - 헷갈린 것: 보드 카드에서 열리는 화면과 "이슈 페이지"의 차이 → 같은 이슈라 어디서 닫아도 같음
+- 한계: "up to date" 요구를 껐으므로, 오래된 브랜치가 최신 main과 합쳐진 결과는 머지 전에 검사되지 않음 (혼자라 위험이 낮다고 판단) /
+  CI 잡이 바뀌면 Ruleset을 손으로 맞춰야 함
+- 상태: 검증
+
 ### ① 협업 기반 1-3: CI — Spring 테스트·Python 문법 검사 (PR #46) / 2026-11-25
 - 문제: 테스트를 돌릴지는 사람의 기억에 달려 있었음. #43 브랜치 보호("CI 통과해야 머지")를 걸려면 CI가 먼저 필요
 - AI 도움: Claude Code (가이드 모드) — 테스트 구조 조사(13개 클래스 중 다수가 `@SpringBootTest`로 실제 MySQL 접속, `gradlew`가 Git에 `100644`로 기록됨),
