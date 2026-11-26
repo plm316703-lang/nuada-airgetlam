@@ -1,6 +1,6 @@
 # 이 저장소로 돌아왔을 때 (인수인계)
 
-> 마지막 갱신: 2026-11-26 — ① 협업 기반 1-1~1-4 완료 (템플릿 PR #45, CI PR #46, 브랜치 보호 #43)
+> 마지막 갱신: 2026-11-26 — **프로젝트 마무리** (② LangChain 줄인 버전·디자인 A·README 데모·2차 회고, Claude에게 위임해 브랜치 `chore/wrap-up`)
 > 여러 PC(학원·집)에서 이어서 작업하므로, 세션을 시작하면 이 파일을 먼저 읽는다.
 
 ---
@@ -19,13 +19,12 @@
 
 ---
 
-## 1. 지금 상태 (11/21)
+## 1. 지금 상태 (11/26 마무리)
 
-- **1차 실험(Claude가 구현) 완료** — PR #22~#30. 결과·소감은 `docs/retrospective.md`, 작업별 기록은 `docs/portfolio-log.md`.
-  만든 기능: B1 채널 상태 지도, R1 역할 화면, R2 계정 발급, R3 로그인 보안, R4 초대, B2 오류 주입 버튼 (자세한 목록은 `CLAUDE.md` 7장)
-- **2차 실험(가이드 모드) 진행 중** — 2단계 로드맵 ① 협업 기반.
-  - 1-0 ✅ A0(LangChain 준비) PR #33, 중간 점검 정리 PR #34 (옛 문서 3개·옛 재생 스크립트 3개·빈 `.gitkeep` 삭제)
-  - 11/21 커밋 전 (브랜치 `docs/refresh` 예정): `docs/ERD.md` v2(실제 테이블 10개 기준으로 다시 씀), `roadmap.md` 상태 갱신, 이 파일
+- **1차 실험(Claude가 구현) 완료** — PR #22~#30. 만든 기능: B1 채널 상태 지도, R1 역할 화면, R2 계정 발급, R3 로그인 보안, R4 초대, B2 오류 주입 버튼
+- **2차 실험(가이드 모드, 내가 직접) 완료** — ① 협업 기반: 라벨·보드·이슈, 템플릿(PR #45), CI(PR #46), 브랜치 보호(#43), 시크릿 검사 확인(#44)
+- **마무리(11/26, Claude에게 위임) 완료** — 디자인 A(환자·보호자 화면), LangChain RAG 비교(`rag_langchain/`), README 데모(`docs/images/`, `scripts/capture_demo.py`), 2차 회고
+  - ③ 배포·④ PWA·⑤ 앱은 **이 프로젝트에서 하지 않음** (하려면 새 프로젝트)
 - 저장소: **GitHub Public**, README 맨 위에 "Claude Code 활용 실험" 안내. 원격 브랜치는 `main` 하나, 태그·릴리스 없음.
   커밋 이메일은 GitHub noreply 주소 (`git config --local user.email`, **다른 PC에서도 한 번 설정 필요**)
 - DB: 테이블 10개 (`docs/ERD.md`). Hibernate가 MySQL에서 enum을 `enum(...)` 칸으로 만들므로,
@@ -42,7 +41,10 @@
 
 | 순서 | 할 일 | 메모 |
 |---|---|---|
-| 1 | **② LangChain RAG A1 개념** | `ai-server-python/rag_langchain/README.md`. 코드는 직접, Claude는 설명·질문·리뷰 |
+| 1 | **`chore/wrap-up` 브랜치 PR 머지** | CI `spring`·`python` 초록불 확인 후 머지 |
+| 2 | 2차 회고 14장 "내 소감" 직접 쓰기 | `docs/retrospective.md` (보완 필요 칸) |
+| 참고 | README 데모를 다시 찍을 때 | Docker 시연 환경 + 세션 진행 중 → `python scripts\capture_demo.py`. 이 PC에서는 Chrome이 재생기를 밀어내 "오래된 명령"이 날 수 있어 스크립트가 안정될 때까지 기다림. Gemini가 503이면 잠시 뒤 다시 |
+| 참고 | `patient@nuada.test` | 비밀번호가 바뀌어 시연 비밀번호로 로그인 안 됨 (촬영 스크립트는 건너뜀) |
 | 보류 | Dependabot(`dependabot.yml`, Settings의 Dependency graph·alerts가 Off), `CONTRIBUTING.md` | #44에서 시크릿 검사만 하고 뺀 것. 필요하면 새 이슈로 |
 | ⚠ | **main은 Ruleset으로 보호 중** | 직접 push 불가 → 문서 수정도 브랜치 + PR + 초록불로. CI 잡을 추가하거나 이름을 바꾸면 Settings → Rules의 필수 검사도 같이 고칠 것 |
 | 후속 | `step12_reject_test.py`를 Java 테스트로 옮기기 (이슈 새로), Dockerfile의 `chmod +x gradlew` 땜질 정리, PR 템플릿 체크 문구의 `docs/study/` 예시 수정 | 작은 일들 |

@@ -17,7 +17,51 @@
   --idle: #6e7681;
   --radius: 10px;
   --mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  /* 브라우저가 기본으로 그리는 스크롤바·입력 칸도 어두운 색으로 그리게 한다 (없으면 표 스크롤바만 하얗게 튐) */
+  color-scheme: dark;
 }
+
+/* ---------- 쉬운 화면 (환자·보호자) ----------
+   관제 담당자는 어두운 관제실 화면이 익숙하지만, 환자·보호자는 집에서 휴대폰·태블릿으로 잠깐 확인한다.
+   그래서 밝은 배경 + 큰 글씨로 바꾼다. 색 변수만 덮어써서 같은 부품(.panel, .now, .badge)을 그대로 쓴다.
+   상태 색은 흰 바탕에서도 글자 대비가 충분하도록 한 단계 진한 색을 쓴다 */
+:root.easy {
+  --bg: #f6f8fa;
+  --panel: #ffffff;
+  --panel-2: #f3f5f7;
+  --line: #d8dee4;
+  --text: #1f2328;
+  --muted: #57606a;
+  --silver: #1f2328;
+  --accent: #0969da;
+  --ok: #1a7f37;
+  --warn: #9a6700;
+  --bad: #cf222e;
+  --idle: #6e7781;
+  color-scheme: light;
+}
+:root.easy body { font-size: 16px; }
+:root.easy .topbar { background: #ffffff; }
+:root.easy .brand b { background: none; color: var(--text); }   /* 은색 그라데이션 글자는 흰 바탕에서 거의 보이지 않음 */
+:root.easy main { max-width: 960px; }                           /* 넓은 화면에서도 한눈에 읽히는 폭 */
+:root.easy .panel { padding: 18px 20px; box-shadow: 0 1px 2px #1f232814; }
+:root.easy .panel h2 { font-size: 16px; }
+:root.easy .now { font-size: 24px; font-weight: 600; padding: 18px 20px; border-left-width: 8px; }
+/* 바탕색도 상태에 맞춰 옅게 칠해, 문장을 읽기 전에도 "괜찮은지"가 먼저 보이게 한다 (문장이 주 정보, 색은 보조) */
+:root.easy .now-RUNNING { background: #dafbe1; }
+:root.easy .now-STOPPED { background: #fff8c5; }
+:root.easy .now-RESET_REQUIRED { background: #ffebe9; }
+:root.easy .stops li { font-size: 17px; }
+:root.easy .big { font-size: 19px; }
+:root.easy .kv { font-size: 15px; }
+:root.easy button { padding: 10px 18px; }
+:root.easy button.primary { color: #ffffff; }
+:root.easy button.danger { background: #ffebe9; color: var(--bad); }
+:root.easy .note { font-size: 14px; color: var(--muted); margin: 12px 0 0; }
+:root.easy .idle-warn { background: #fff8c5; box-shadow: 0 6px 24px #1f232833; }   /* 어두운 경고 상자에 진한 글자가 겹쳐 안 보이는 것 방지 */
+/* 팔 그림은 어두운 "모니터 창"으로 남긴다: 그림 색(은색 팔·상태색 관절)이 어두운 바탕 기준으로 맞춰져 있음.
+   다만 환자 화면에서 그림이 너무 커져 아래 정보를 밀어내지 않게 높이만 제한한다 */
+:root.easy canvas#arm, :root.easy canvas.arm { max-height: 280px; }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--text);
@@ -40,6 +84,14 @@ select, input { font: inherit; background: var(--panel-2); color: var(--text); b
   background: linear-gradient(90deg, #f0f3f6, #8b949e 60%, #f0f3f6); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .brand span { color: var(--muted); font-size: 13px; }
 .who { color: var(--muted); font-size: 13px; display: flex; gap: 10px; align-items: center; }
+.who button { white-space: nowrap; }
+/* 휴대폰 폭: 한 줄에 다 넣으면 버튼 글자가 세로로 쪼개진다 → 이름·버튼을 둘째 줄로 내리고 부제는 숨긴다 */
+@media (max-width: 600px) {
+  .topbar { flex-wrap: wrap; padding: 10px 14px; }
+  .brand span { display: none; }
+  .who { width: 100%; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+  .who button { padding: 6px 10px; }
+}
 
 /* ---------- 배치 ---------- */
 main { padding: 16px 20px 40px; max-width: 1400px; margin: 0 auto; }

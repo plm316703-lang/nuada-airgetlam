@@ -44,6 +44,19 @@
 5. Claude가 직접 해도 되는 것: **결정 기록·안내 문서 정리**(CLAUDE.md, roadmap, next-session, portfolio-log), 상태 확인(읽기 전용 조회).
    그 외 파일·설정 변경은 내가 요청할 때만.
 6. 이 모드를 끝낼 때는 내가 말한다.
+7. **11/26 가이드 모드 종료 → 마무리 위임.** "이거 다 너가 진행해, 깔끔하게 마무리해 봐, 위임할게"라고 말함.
+   남은 마무리(디자인 A, LangChain RAG 줄인 버전, RAG 미니 평가, README 데모, 회고)는 **Claude가 구현**하고 나는 결과를 확인한다.
+   기록에는 어디까지가 내가 직접 한 것(① 협업 기반)이고 어디부터 위임한 것인지 구분해서 남긴다.
+
+### 2-2. 채팅 말투 (2026-11-26 결정)
+
+- **채팅에서 나에게 말할 때만** 아래 형식으로 간결하게 설명한다. (처음엔 판타지+철학이었으나 문장이 길어져 같은 날 변경)
+  1. **한 줄:** 개념을 한 문장으로.
+  2. **그림:** 흐름을 화살표 도식으로. 예) `질문 → 찾기 → 끼워 넣기 → 생성 → 답`
+  3. **비유:** 도서관 사서 비유 한두 문장. (질문 받기 → 책 찾기(검색) → 해당 쪽 펴기(근거) → 요약해 주기(생성))
+  4. **철학 한 줄:** "왜 이렇게 하는가", "편리함의 대가는 무엇인가" 같은 생각할 질문 하나.
+- **PR 본문·커밋 메시지·`.md` 문서·코드 주석에는 쓰지 않는다.** 그대로 평범한 한국어로 쓴다. (Public 저장소 기록)
+- 말투가 바뀌어도 기술 내용의 정확성, 영어 식별자 풀이, 가이드 모드 원칙(2-1장)은 그대로 지킨다.
 
 ## 3. 프로젝트 소개
 
@@ -113,7 +126,7 @@ nuada-airgetlam/
 - 계정은 스스로 가입하지 않고 **관리자가 발급**한다. 임시 비밀번호는 서버가 만들어 한 번만 보여 주고, 첫 로그인 때 바꾸게 한다.
 - 로그인 실패 5회 → 15분 잠금, 30분 무조작 자동 로그아웃 (관제 화면은 세션 진행 중이면 제외).
 
-## 7. 현재 진행 상황 (2026-11-20 갱신)
+## 7. 현재 진행 상황 (2026-11-26 갱신 — 마무리)
 
 > **세션을 시작하면 `docs/next-session.md`를 먼저 읽는다.**
 
@@ -164,21 +177,23 @@ nuada-airgetlam/
   - 공개 전 점검: `backend-spring.zip`(커밋 58dae63, 옛 로컬 DB 설정·비밀번호 포함) 삭제 + `.gitignore`에 `*.zip`·`application-local.yaml` 추가.
     저장소는 **이미 Public**이었고 zip의 비밀번호는 MySQL **root** 것 → root 비밀번호 변경 완료 (11/20)
   - portfolio-log PR #19~#21 빈칸을 당시 PR 본문 근거로 채움. R2·R4·B2의 "확인 중 이상한 점" 칸은 기억나면 내가 보완
-- 👉 **지금: 2단계 로드맵 (가이드 모드 2-1장, 상세 `docs/roadmap.md` "2단계")**
-  - 순서: **① 협업 기반**(Issues·Projects, PR 템플릿, CI, 브랜치 보호) → ② LangChain RAG + 평가 세트 → ③ 배포(무료 우선) + CD + 모니터링 → ④ PWA(보호자 알림) → ⑤ 모바일 앱
-  - 다음 주 "별도 앱" 계획은 **이 프로젝트를 앱으로 만드는 것(④·⑤)으로 변경**
-  - ✅ ① 1-1 라벨·Milestone·보드 `Nuada 2단계`·이슈 #41~#44, 1-2 템플릿(PR #45), 1-3 CI `spring`·`python` 잡(PR #46), 1-4 브랜치 보호(이슈 #43, 11/26)
-    - ⚠ **main은 Ruleset으로 보호 중**: 직접 push 불가, PR + 필수 검사 `spring`·`python` 통과해야 머지. 1-5(#44)는 시크릿 검사 확인만(11/26), Dependabot·CONTRIBUTING 보류
-  - 👉 다음: **② LangChain RAG A1 개념** (`ai-server-python/rag_langchain/README.md`)
-  - ✅ A0(LangChain 준비) 머지 (PR #33): `rag_langchain/README.md`·`requirements.txt`, `.venv`는 로컬에만(무시됨)
-  - ✅ 중간 점검 정리 (11/21, PR #34 머지): 옛 문서 3개(learning-log·project-overview·service-plan), 옛 재생 스크립트(step10·step12_replay_ws·step12_connect_test), 빈 `.gitkeep` 삭제.
-    `step12_reject_test.py`는 CI 자동 테스트 재료로 보류
-    - 위치 `ai-server-python/rag_langchain/`, 별도 서버 포트 8001, `/guide` 응답 모양은 기존과 같게, 별도 가상환경
-    - 단계: A1 개념 → A2 자르기·색인 → A3 검색 비교 → A4 프롬프트·생성 → A5 실패 처리·API → A6 비교표
+- ✅ **2단계 ① 협업 기반** (가이드 모드, 내가 직접 — 11/21~11/26)
+  - 1-1 라벨·Milestone·보드 `Nuada 2단계`·이슈 #41~#44, 1-2 템플릿(PR #45), 1-3 CI `spring`·`python` 잡(PR #46), 1-4 브랜치 보호(이슈 #43), 1-5 시크릿 검사 확인만(#44)
+  - ⚠ **main은 Ruleset으로 보호 중**: 직접 push 불가, PR + 필수 검사 `spring`·`python` 통과해야 머지
+  - A0(LangChain 준비, PR #33), 중간 점검 정리(PR #34) — `step12_reject_test.py`는 보류
+- ✅ **마무리 (11/26, Claude에게 위임 — 2-1장 7번)** — 브랜치 `chore/wrap-up`
+  - 결정: ② LangChain RAG **줄인 버전까지 하고 이 프로젝트 마무리**. ③ 배포·④ PWA·⑤ 앱은 제외(하려면 새 프로젝트)
+  - 디자인 A: `app.css`의 `:root.easy`(밝은 테마·큰 글씨) → `patient.html`·`guardian.html`에 `class="easy"`, 휴대폰 폭 머리글, `color-scheme: dark`(하얀 스크롤바 해결)
+  - LangChain: `rag_langchain/lc_rag.py`·`compare.py`·`eval_set.json`·`results.md` — 조각 40개 완전 일치, 검색 8/8 일치, 미니 평가 두 구현 모두 @1 9/10. A5(서버·Spring 연결)는 뺌
+  - README 데모: `scripts/capture_demo.py`(창 없는 Chrome 자동 촬영) → `docs/images/`(demo.gif, dashboard·patient-mobile·guardian.png)
+    - ⚠ 이 PC(4코어)에서 Chrome이 관제 화면을 띄우면 재생기 메시지가 2초 넘게 밀려 "오래된 명령"으로 차단됨 → 스크립트는 Chrome을 가장 낮은 우선순위로 띄우고, 판단이 안정된 뒤에만 주입
+    - Gemini `gemini-3.1-flash-lite`가 11/26 오후 503(과부하)·504를 자주 냄 → 스크립트는 RAG 생성 실패면 멈춤, 다시 실행
+  - 문서: README(데모·화면·RAG 비교), `retrospective.md` 2차 회고(11~15장, 14장 소감은 내가 채움), `portfolio-log.md` 10장
+  - 남은 것: 2차 회고 14장 소감 직접 쓰기, `patient@nuada.test`는 비밀번호가 바뀌어 시연 비밀번호로 로그인 안 됨
 - ✅ **Docker 전체 실행 다시 확인** (PR #32) — 11/17 확인(deploy.md 7-2) 이후 변경분 반영.
   Compose에 `DEMO_INJECTION_ENABLED`·`JWT_LIFETIME_MINUTES` 전달, Gemini 기본값 flash-lite, 오류 주입 안내를 버튼으로.
   **Docker 화면 주소는 `http://localhost:8081`** (다른 Docker 프로젝트 `demo`가 8080을 써서 11/20 변경, 로컬 실행은 그대로 8080)
-- 나중에: 전체 실행 스크립트(`scripts/run-all.ps1`), C1 주파수 화면, C2 LSL, RAG LangChain 재구현(직접 작성, Claude는 리뷰만)
+- 하지 않기로 함(11/26): 전체 실행 스크립트(`scripts/run-all.ps1`), C1 주파수 화면, C2 LSL, 경보 등급, Dependabot·CONTRIBUTING
 
 ## 8. 작업 규칙
 

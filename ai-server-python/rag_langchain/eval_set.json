@@ -1,0 +1,15 @@
+{
+  "_설명": "RAG 미니 평가 10문항. 관제 담당자가 오류 종류를 모른 채 증상만 보고 묻는 말 → 어느 매뉴얼의 어느 소제목이 나와야 하는지. 정답 표시는 Claude가 매뉴얼을 읽고 정했고(11/26), 한 사람이 정한 정답이라는 한계가 있다.",
+  "questions": [
+    {"id": 1, "question": "거의 모든 채널에 똑같은 모양의 빠른 진동이 겹쳐 보여요.", "doc": "LINE_NOISE.md", "section": "증상"},
+    {"id": 2, "question": "충전기를 환자 옆으로 가져온 뒤부터 신호가 나빠졌어요. 무엇부터 확인하나요?", "doc": "LINE_NOISE.md", "section": "확인 방법"},
+    {"id": 3, "question": "C3 채널 하나만 거의 평평한 선으로 나와요.", "doc": "ELECTRODE_CONTACT.md", "section": "증상"},
+    {"id": 4, "question": "환자가 이를 악물자 이마 쪽 채널에 불규칙한 잡음이 커졌어요.", "doc": "MUSCLE_ARTIFACT.md", "section": "증상"},
+    {"id": 5, "question": "마지막 수신 시간이 계속 늘어나다가 로봇팔이 멈췄어요.", "doc": "PACKET_LOSS.md", "section": "증상"},
+    {"id": 6, "question": "연결이 12초 동안 끊겼다가 다시 들어와요. 바로 재개해도 되나요?", "doc": "PACKET_LOSS.md", "section": "해결 단계"},
+    {"id": 7, "question": "판별기가 만든 시각과 서버가 받은 시각 차이가 2초를 넘었다고 나와요.", "doc": "STALE_COMMAND.md", "section": "증상"},
+    {"id": 8, "question": "관문이 OUT_OF_ORDER 로 메시지를 거부하고 팔이 멈췄어요.", "doc": "INVALID_MESSAGE.md", "section": "증상"},
+    {"id": 9, "question": "판별기는 MOVE라고 보냈는데 관문은 같은 확신도로 ABSTAIN이라고 판단했어요.", "doc": "DECISION_MISMATCH.md", "section": "증상"},
+    {"id": 10, "question": "신호 품질이 0.6 아래인데 판별기가 원인을 지목하지 않아요.", "doc": "SIGNAL_QUALITY_LOW.md", "section": "증상"}
+  ]
+}

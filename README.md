@@ -3,14 +3,20 @@
 > 뇌파 판별 결과를 **안전 관문**이 다시 검사해 가상 로봇팔을 움직이고, 장비 오류가 나면 그 자리에서 정지·기록하고
 > **RAG가 매뉴얼 근거로 점검 방법을 안내**하는 관제 시스템
 
-> **이 저장소는 AI 코딩 에이전트(Claude Code) 활용 실험입니다.** 두 단계로 진행합니다.
-> 1. **1차 실험 (2026-11-20, 완료):** 구현의 대부분을 Claude Code가 맡았고, 저는 설계를 결정하고 모든 단계를 직접 실행해 확인했습니다.
-> 2. **2차 실험 (2026-11-20~, 진행 중):** 1차 회고에서 나온 "AI가 만든 코드가 블랙박스가 된다"는 문제를 줄이려고,
->    이번에는 **제가 직접 작업**하고 Claude Code는 단계 안내·개념 설명·리뷰만 합니다 (가이드 모드).
->    협업 기반(이슈·CI·브랜치 보호) → LangChain RAG → 배포 → PWA → 모바일 앱 순서입니다 ([`docs/roadmap.md`](docs/roadmap.md) "2단계").
+![관제 화면 데모: 정상 동작 → 전극 불량 주입 → 그 자리 정지·문제 채널 표시·RAG 점검 안내 → 연속 정상 데이터 확인 후 수동 재개](docs/images/demo.gif)
+
+> 관제 화면 데모 (약 16초): 정상 동작 → 시연용 **전극 불량** 주입 → 관문이 차단해 팔이 그 자리에 정지,
+> 채널 지도에 문제 채널(C3·Cz·C4) 표시 → RAG가 매뉴얼 근거로 점검 안내 → 연속 정상 데이터가 쌓인 뒤 **사람이 수동 재개**
+
+> **이 저장소는 AI 코딩 에이전트(Claude Code) 활용 실험이며, 2026-11-26 마무리했습니다.**
+> 1. **1차 실험 (11/20) — 맡기기:** 구현의 대부분을 Claude Code가 맡았고, 저는 설계를 결정하고 모든 단계를 직접 실행해 확인했습니다.
+> 2. **2차 실험 (11/21~11/26) — 직접 하기:** 1차 회고의 "AI가 만든 코드가 블랙박스가 된다"는 문제를 줄이려고,
+>    협업 기반(이슈·템플릿·CI·브랜치 보호)은 **제가 직접** 하고 Claude Code는 안내·설명·리뷰만 했습니다 (가이드 모드).
+> 3. **마무리 (11/26) — 다시 맡기기:** 남은 일(환자·보호자 화면 개선, LangChain RAG 비교, 이 README의 데모)은 Claude Code에게 위임했습니다.
+>    배포·PWA·모바일 앱은 이 프로젝트에서 하지 않기로 했습니다 ([`docs/roadmap.md`](docs/roadmap.md) 11/26 결정).
 >
 > 무엇을 AI가 했고, 무엇을 제가 결정했고, AI가 틀린 것을 어떻게 잡았는지는 아래 문서에 그대로 남겼습니다.
-> - [`docs/retrospective.md`](docs/retrospective.md) — 1차 실험 회고 (결과·소감·블랙박스 문제)
+> - [`docs/retrospective.md`](docs/retrospective.md) — 1차·2차 실험 회고 (결과·소감·블랙박스 문제·두 방식 비교)
 > - [`docs/portfolio-log.md`](docs/portfolio-log.md) — 작업마다 문제 / AI 도움 / 내 판단 / 검증 / 실험 노트
 > - [`CLAUDE.md`](CLAUDE.md) — AI에게 준 진행 규칙(2-1장 가이드 모드 포함)과 내 설계 결정
 >
@@ -44,21 +50,42 @@
 | 계정·보안 | 관리자 발급 + 임시 비밀번호(첫 로그인 변경 강제), 환자·보호자 초대 링크, 5회 실패 잠금, 로그인 기록, 30분 자동 로그아웃 |
 | 개인정보 | 동의하지 않은 환자 데이터는 연구에 쓰지 않음, 철회 시 연구 데이터 삭제, 관제 담당자는 익명 코드만 |
 
+## 화면
+
+| 관제 화면 (관제 담당자·연구책임자) | 환자 화면 (휴대폰) | 보호자 화면 |
+|---|---|---|
+| <img src="docs/images/dashboard.png" alt="관제 화면: 로봇팔, 판별 확신도·신호 품질 그래프, 22채널 상태 지도, 관문 판단 기록, 장비 오류와 RAG 점검 안내" width="420"> | <img src="docs/images/patient-mobile.png" alt="환자 화면: 지금 내 로봇팔 상태 한 문장, 팔 모습, 오늘 멈춘 기록, 연구 참여 동의" width="200"> | <img src="docs/images/guardian.png" alt="보호자 화면: 연결된 환자의 상태 한 문장, 팔 모습, 오늘 멈춘 기록" width="320"> |
+| 어두운 관제실 테마. 그래프로 "언제", 채널 지도로 "어디가" 나빠졌는지 | 밝은 배경·큰 글씨, 정지 사유는 서버가 **쉬운 말**로 바꿔 보냄 | 보기 전용. 동의·철회는 환자 본인만 |
+
+사진과 GIF는 [`scripts/capture_demo.py`](scripts/capture_demo.py)가 Docker 시연 환경에서 자동으로 찍습니다.
+
+## RAG: 직접 구현 vs LangChain
+
+점검 안내 RAG는 LangChain 없이 직접 구현했고(`ai-server-python/rag/`), 마무리 단계에서 같은 기능을 LangChain으로 다시 만들어 비교했습니다
+([`ai-server-python/rag_langchain/`](ai-server-python/rag_langchain/README.md)).
+
+| 항목 | 결과 |
+|---|---|
+| 자르기·검색 | 조각 40개 완전히 같음, 오류 8종 검색 결과 8/8 일치 |
+| 미니 평가 10문항 (증상만 보고 질문) | 두 구현 모두 정답 매뉴얼 1등 9/10, 3등 안 10/10 |
+| 코드 줄 수 (핵심) | 101줄 vs 99줄 |
+| 배운 것 | 품질은 프레임워크가 아니라 자르기·임베딩·검색 규칙이 정한다. LangChain에는 "재시도 6번" 같은 숨은 기본값이 있어 직접 구현의 25초 제한 결정과 맞추려면 소스를 읽어야 했다 |
+
 ## 기술 스택
 
 - **Backend:** Java 21, Spring Boot 4, Spring Data JPA, Spring Security(JWT, HttpOnly 쿠키), WebSocket, MySQL 8
-- **AI / BCI:** Python 3.11, MNE, MOABB, scikit-learn(CSP+LDA), FastAPI, Chroma, Gemini API (RAG는 LangChain 없이 직접 구현)
+- **AI / BCI:** Python 3.11, MNE, MOABB, scikit-learn(CSP+LDA), FastAPI, Chroma, Gemini API (RAG는 직접 구현 + 비교용 LangChain 구현)
 - **Frontend:** HTML, CSS, JavaScript (Canvas, SVG, Chart.js)
-- **Infra:** Docker Compose
+- **Infra·협업:** Docker Compose, GitHub Actions CI(Spring 테스트·Python 문법 검사), main 브랜치 보호(PR + 필수 검사), Issues·Projects
 
 ## 폴더 구조
 
 ```
 nuada-airgetlam/
 ├── backend-spring/     # Spring: 관문, 로봇팔, 기록, 관제 화면, 인증, 환자·계정
-├── ai-server-python/   # 판별기 학습, 재생기(realtime/), RAG 서버(rag/)
-├── scripts/            # 로컬 실행 스크립트
-├── docs/               # 회고, 작업 기록, 로드맵, 메시지 규격, ERD, 실행 문서
+├── ai-server-python/   # 판별기 학습, 재생기(realtime/), RAG 서버(rag/), LangChain 비교 구현(rag_langchain/)
+├── scripts/            # 로컬 실행 스크립트, README 데모 촬영(capture_demo.py)
+├── docs/               # 회고, 작업 기록, 로드맵, 메시지 규격, ERD, 실행 문서, 화면 사진(images/)
 └── docker-compose.yml
 ```
 
