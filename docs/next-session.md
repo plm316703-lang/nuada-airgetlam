@@ -42,8 +42,8 @@
 
 | 순서 | 할 일 | 메모 |
 |---|---|---|
-| 1 | (선택) #44 Dependabot·시크릿 검사·CONTRIBUTING (1-5) | 안 하면 #44에 이유를 남기고 닫은 뒤 ② LangChain RAG로 |
-| 2 | ② LangChain RAG A1 개념 | `ai-server-python/rag_langchain/README.md` |
+| 1 | **② LangChain RAG A1 개념** | `ai-server-python/rag_langchain/README.md`. 코드는 직접, Claude는 설명·질문·리뷰 |
+| 보류 | Dependabot(`dependabot.yml`, Settings의 Dependency graph·alerts가 Off), `CONTRIBUTING.md` | #44에서 시크릿 검사만 하고 뺀 것. 필요하면 새 이슈로 |
 | ⚠ | **main은 Ruleset으로 보호 중** | 직접 push 불가 → 문서 수정도 브랜치 + PR + 초록불로. CI 잡을 추가하거나 이름을 바꾸면 Settings → Rules의 필수 검사도 같이 고칠 것 |
 | 후속 | `step12_reject_test.py`를 Java 테스트로 옮기기 (이슈 새로), Dockerfile의 `chmod +x gradlew` 땜질 정리, PR 템플릿 체크 문구의 `docs/study/` 예시 수정 | 작은 일들 |
 | 선택 | 보드에 PR 카드도 올라옴 → Auto-add 필터를 `is:issue`로 바꿀지 | 분야 라벨 색이 기존 라벨과 비슷한 것도 선택 사항 |
@@ -118,6 +118,7 @@
 | #42 CI 결정 | Python 검사는 **compileall**(설치 없이 문법만). `step12_reject_test.py`는 서버가 떠 있어야 하고 자동 판정이 없어 **이번 CI에서 제외** → 나중에 Java 테스트로 옮기는 이슈를 따로 만듦 | 11/25 |
 | CI 서비스·설정값 | 가이드 모드 예외 3·4번째: Python 잡(compileall)도 사용자 요청으로 Claude가 작성. 사용자 요청으로 `ci.yml`의 `services`(MySQL **8.4**, docker-compose와 같게)·`env`(가짜 값)를 Claude가 작성. 뼈대·checkout·setup-java·테스트 스텝·실행 권한 해결은 직접 | 11/25 |
 | #43 브랜치 보호 | 혼자라도 **켬** (바쁠 때의 나를 막는 장치, CI가 실제로 막게). Ruleset `main 보호`: 삭제·강제 push 금지, PR 필수 **승인 0명**, 필수 검사 `spring`·`python`, "up to date" 요구 **끔**, Bypass **비움**. 직접 push 거부와 CI 실패 PR 차단을 직접 시험(PR #48 Close) | 11/26 |
+| #44 범위 | **시크릿 검사 확인만** 하고 ②로. Secret Protection·Push protection은 공개 저장소 기본값으로 이미 켜짐. 진짜 키로 차단 시험은 하지 않음(공개 저장소라 통과하면 노출). Dependabot·CONTRIBUTING은 보류 | 11/26 |
 
 ---
 
