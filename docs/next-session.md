@@ -42,6 +42,7 @@
 | 순서 | 할 일 | 메모 |
 |---|---|---|
 | ✅ | 마무리 PR #51 머지, 2차 회고 14장 소감 (11/26) | 이 프로젝트는 마무리됨. 새로 할 일은 없음 |
+| 참고 | **포트폴리오 자료 (11/26)** | API 명세 `docs/api-spec.md`(코드 기준, 코드 바꾸면 함께 수정). 발표 자료 12장은 claude.ai 아티팩트 "Nuada Airgetlám — 포트폴리오"(비공개, PDF·PPTX로 내려받기 가능, 표지의 `[이름]` 직접 채우기) |
 | 참고 | **다른 컴퓨터에서 시연할 때** | `docs/demo-guide.md` — `git clone` → `.env`(Gemini 키만 옮기고 나머지는 새로 만들어도 됨) → `docker compose up -d --build` → 8081 |
 | 참고 | README 데모를 다시 찍을 때 | Docker 시연 환경 + 세션 진행 중 → `python scripts\capture_demo.py`. 이 PC에서는 Chrome이 재생기를 밀어내 "오래된 명령"이 날 수 있어 스크립트가 안정될 때까지 기다림. Gemini가 503이면 잠시 뒤 다시 |
 | 참고 | `patient@nuada.test` | 비밀번호가 바뀌어 시연 비밀번호로 로그인 안 됨 (촬영 스크립트는 건너뜀) |
