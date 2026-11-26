@@ -188,8 +188,9 @@ nuada-airgetlam/
   - README 데모: `scripts/capture_demo.py`(창 없는 Chrome 자동 촬영) → `docs/images/`(demo.gif, dashboard·patient-mobile·guardian.png)
     - ⚠ 이 PC(4코어)에서 Chrome이 관제 화면을 띄우면 재생기 메시지가 2초 넘게 밀려 "오래된 명령"으로 차단됨 → 스크립트는 Chrome을 가장 낮은 우선순위로 띄우고, 판단이 안정된 뒤에만 주입
     - Gemini `gemini-3.1-flash-lite`가 11/26 오후 503(과부하)·504를 자주 냄 → 스크립트는 RAG 생성 실패면 멈춤, 다시 실행
-  - 문서: README(데모·화면·RAG 비교), `retrospective.md` 2차 회고(11~15장, 14장 소감은 내가 채움), `portfolio-log.md` 10장
-  - 남은 것: 2차 회고 14장 소감 직접 쓰기, `patient@nuada.test`는 비밀번호가 바뀌어 시연 비밀번호로 로그인 안 됨
+  - 문서: README(데모·화면·RAG 비교), `retrospective.md` 2차 회고(11~15장), `portfolio-log.md` 10장
+  - ✅ 마무리 PR #51 머지 (11/26), 2차 회고 14장 소감 작성 (내 방향을 Claude가 정리)
+  - 참고: `patient@nuada.test`는 비밀번호가 바뀌어 시연 비밀번호로 로그인 안 됨
 - ✅ **Docker 전체 실행 다시 확인** (PR #32) — 11/17 확인(deploy.md 7-2) 이후 변경분 반영.
   Compose에 `DEMO_INJECTION_ENABLED`·`JWT_LIFETIME_MINUTES` 전달, Gemini 기본값 flash-lite, 오류 주입 안내를 버튼으로.
   **Docker 화면 주소는 `http://localhost:8081`** (다른 Docker 프로젝트 `demo`가 8080을 써서 11/20 변경, 로컬 실행은 그대로 8080)
