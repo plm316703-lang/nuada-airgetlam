@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" class="easy">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -55,7 +55,7 @@
       el('ul', { class: 'stops' }, ...(shown.length
         ? shown.map(x => el('li', {}, el('time', {}, hhmm(x.at)), el('span', {}, x.reason)))
         : [el('li', { class: 'muted' }, '오늘은 멈춘 적이 없어요.')])),
-      stops.length > SHOW_STOPS ? el('p', { class: 'muted', style: 'font-size:12px;margin:6px 0 0' }, `이전 기록 ${stops.length - SHOW_STOPS}건 더 있음`) : null);
+      stops.length > SHOW_STOPS ? el('p', { class: 'note' }, `이전 기록 ${stops.length - SHOW_STOPS}건 더 있음`) : null);
 
     requestAnimationFrame(() => drawArm(canvas, p.arm ? p.arm.angle : 90, state));
     return node;
