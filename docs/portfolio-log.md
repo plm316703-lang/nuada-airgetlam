@@ -624,6 +624,36 @@ Python 재생기 ─WebSocket─▶ 문지기(비밀키) ─▶ 핸들러 ─▶
 
 ## 8. Git·협업 관리
 
+### ① 협업 기반 1-3: CI — Spring 테스트·Python 문법 검사 (PR #46) / 2026-11-25
+- 문제: 테스트를 돌릴지는 사람의 기억에 달려 있었음. #43 브랜치 보호("CI 통과해야 머지")를 걸려면 CI가 먼저 필요
+- AI 도움: Claude Code (가이드 모드) — 테스트 구조 조사(13개 클래스 중 다수가 `@SpringBootTest`로 실제 MySQL 접속, `gradlew`가 Git에 `100644`로 기록됨),
+  개념 설명(러너·워크플로·잡·스텝, `uses`/`run`, 서비스 컨테이너, 환경 변수 vs Secrets, exit code, `Caused by` 읽는 법),
+  공개 API로 실행 결과·스텝 시간 조회, 로그 해석 리뷰
+- 내 판단과 행동:
+    - 결정: Python 검사는 `compileall`(설치 없이 문법만), `step12_reject_test.py`는 서버가 필요하고 자동 판정이 없어 제외
+    - 로컬 기준선부터 확인: `gradlew test` → 13개 클래스, 46개 통과 (DB는 `.env`의 프로젝트 계정으로 접속 확인)
+    - `ci.yml` 뼈대(`name`·`on`·`jobs`·`runs-on`)와 checkout@v7·setup-java@v6(Temurin, '21')·테스트 스텝을 직접 작성. 버전은 README에서 직접 찾음
+    - Draft PR로 일찍 열어 CI를 돌림 (`on: push`는 main만이라 브랜치 push로는 안 돎)
+    - 실행 권한은 CI에서 땜질하지 않고 Git 기록을 고침: `git update-index --chmod=+x backend-spring/gradlew` (100644 → 100755)
+- 검증 (실패를 한 겹씩 벗긴 과정):
+    1. 1차: `./gradlew: Permission denied`, exit code **126** (찾았지만 실행 불가) — 테스트 스텝 0초
+    2. 2차(실행 권한 수정 후): 46개 중 **21개 실패**, exit code **1** (실행됐지만 실패) — 40초.
+       첫 실패의 맨 아래 `Caused by: HibernateException at DialectFactoryImpl` = DB 접속 불가. 나머지 20개는 같은 원인(스프링이 실패한 컨텍스트를 재사용)
+       실패 21개는 전부 DB가 필요한 테스트, 통과 25개는 DB 없이 도는 테스트
+    3. 3차(MySQL 8.4 서비스 컨테이너 + 가짜 설정값): **초록불**
+    4. 4차(Python 잡 추가): `CI / spring`(약 88초)과 `CI / python`(약 5초)이 **동시에** 돌고 둘 다 통과 (커밋 1d28d48)
+- 증거: PR #46, 커밋 c66e325 · 7d2c60e · cbbd8d5 · 1d28d48, Actions 실행 기록 4회
+- 실험 노트:
+    - 내가 잡은 것: 로그에서 `Permission denied`와 `46 tests completed, 21 failed`를 직접 찾아옴 / 근본 해결로 (나) Git 권한 수정을 고름
+    - 내가 헷갈린 것: 코드를 "로컬에서" 받아온다고 생각함(실제는 push된 커밋) / 가짜 값을 "노출되지 않아서" 괜찮다고 답함(실제는 노출되지만 피해가 없어서) /
+      `jops`·`user:`·`-name:` 같은 철자·띄어쓰기, 주석만 있는 `-` 항목, steps 밖의 스텝
+    - 발견: `backend-spring/Dockerfile`에 이미 `chmod +x gradlew`가 있었음 → 1차 실험 때 같은 문제를 땜질로 넘긴 흔적 (지금은 그대로 둠)
+    - 가이드 모드 예외: 내 요청으로 `services`·`env`와 Python 잡은 Claude가 작성
+    - DBeaver root 접속이 안 됨 → 이 PC의 MySQL은 8.0이고 root 비밀번호를 모름. 프로젝트는 별도 계정을 써서 영향 없음 (root는 나중에)
+- 한계: Python은 문법만 검사하고 실제 테스트는 없음 / step12를 Java 테스트로 옮기는 일은 남음 /
+  로그의 테스트 개수(46)는 로그인해야 보여 Claude는 확인 못 함 / Dockerfile의 `chmod` 땜질 줄은 아직 남아 있음
+- 상태: 검증
+
 ### ① 협업 기반 1-1·1-2: 라벨·Milestone·보드·이슈, PR·이슈 템플릿 (PR #45) / 2026-11-25
 - 문제: 2단계부터 "팀처럼" 이슈 → PR → 머지로 일하려는데, 저장소에 분류 기준(라벨·Milestone)·작업판(보드)·양식(템플릿)이 없음
 - AI 도움: Claude Code (가이드 모드) — 단계 안내, 개념 설명(라벨·Milestone·보드의 역할 차이, `Closes #번호`, 템플릿 위치 규칙),
