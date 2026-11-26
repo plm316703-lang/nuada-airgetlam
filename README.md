@@ -95,6 +95,7 @@ nuada-airgetlam/
 |---|---|---|
 | 로컬 (Docker 없이) | [docs/local-run.md](docs/local-run.md) | JDK 21 + MySQL 8 + Python, `scripts\run-*.ps1` 세 개 |
 | Docker Compose | [docs/deploy.md](docs/deploy.md) | `docker compose up -d --build` → http://localhost:8081, 오류 주입은 관제 화면 버튼 |
+| 다른 컴퓨터에서 시연 | [docs/demo-guide.md](docs/demo-guide.md) | `git clone` → `.env` 준비 → Docker 실행, 시연 순서·주의점·체크리스트 |
 
 두 방법 모두 저장소 최상위 `.env`(견본: `.env.example`) 하나를 읽습니다.
 관문 메시지 규격과 검사 순서는 [docs/message-spec.md](docs/message-spec.md), DB 테이블 10개와 설계 이유는 [docs/ERD.md](docs/ERD.md).
