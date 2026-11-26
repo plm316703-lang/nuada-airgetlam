@@ -1,6 +1,6 @@
 # 이 저장소로 돌아왔을 때 (인수인계)
 
-> 마지막 갱신: 2026-11-25 — ① 협업 기반 1-1·1-2(PR #45)·1-3 CI(PR #46) 완료
+> 마지막 갱신: 2026-11-26 — ① 협업 기반 1-1~1-4 완료 (템플릿 PR #45, CI PR #46, 브랜치 보호 #43)
 > 여러 PC(학원·집)에서 이어서 작업하므로, 세션을 시작하면 이 파일을 먼저 읽는다.
 
 ---
@@ -42,8 +42,9 @@
 
 | 순서 | 할 일 | 메모 |
 |---|---|---|
-| 1 | **#43 브랜치 보호** (1-4) | 통과 필수 검사: `CI / spring`, `CI / python`. "승인 리뷰 필수"는 혼자라 넣지 않는 쪽으로 검토 |
-| 2 | (선택) #44 Dependabot·시크릿 검사·CONTRIBUTING (1-5) | |
+| 1 | (선택) #44 Dependabot·시크릿 검사·CONTRIBUTING (1-5) | 안 하면 #44에 이유를 남기고 닫은 뒤 ② LangChain RAG로 |
+| 2 | ② LangChain RAG A1 개념 | `ai-server-python/rag_langchain/README.md` |
+| ⚠ | **main은 Ruleset으로 보호 중** | 직접 push 불가 → 문서 수정도 브랜치 + PR + 초록불로. CI 잡을 추가하거나 이름을 바꾸면 Settings → Rules의 필수 검사도 같이 고칠 것 |
 | 후속 | `step12_reject_test.py`를 Java 테스트로 옮기기 (이슈 새로), Dockerfile의 `chmod +x gradlew` 땜질 정리, PR 템플릿 체크 문구의 `docs/study/` 예시 수정 | 작은 일들 |
 | 선택 | 보드에 PR 카드도 올라옴 → Auto-add 필터를 `is:issue`로 바꿀지 | 분야 라벨 색이 기존 라벨과 비슷한 것도 선택 사항 |
 | 나중에 | 전체 실행 스크립트 `scripts/run-all.ps1`, C1 주파수 화면, C2 LSL | 실험 범위 밖 |
@@ -116,6 +117,7 @@
 | 템플릿 파일 | 가이드 모드 예외 2번째: 사용자 요청("다 작성해줘")으로 `.github/` 템플릿 3개를 **Claude가 작성**. 사용자는 폴더·빈 파일을 만들었고, PR 템플릿이 `ISSUE_TEMPLATE/` 안에 있던 것을 Claude가 `.github/` 바로 아래로 옮김. 작성 요령은 설명으로 대신 | 11/25 |
 | #42 CI 결정 | Python 검사는 **compileall**(설치 없이 문법만). `step12_reject_test.py`는 서버가 떠 있어야 하고 자동 판정이 없어 **이번 CI에서 제외** → 나중에 Java 테스트로 옮기는 이슈를 따로 만듦 | 11/25 |
 | CI 서비스·설정값 | 가이드 모드 예외 3·4번째: Python 잡(compileall)도 사용자 요청으로 Claude가 작성. 사용자 요청으로 `ci.yml`의 `services`(MySQL **8.4**, docker-compose와 같게)·`env`(가짜 값)를 Claude가 작성. 뼈대·checkout·setup-java·테스트 스텝·실행 권한 해결은 직접 | 11/25 |
+| #43 브랜치 보호 | 혼자라도 **켬** (바쁠 때의 나를 막는 장치, CI가 실제로 막게). Ruleset `main 보호`: 삭제·강제 push 금지, PR 필수 **승인 0명**, 필수 검사 `spring`·`python`, "up to date" 요구 **끔**, Bypass **비움**. 직접 push 거부와 CI 실패 PR 차단을 직접 시험(PR #48 Close) | 11/26 |
 
 ---
 
