@@ -1,6 +1,6 @@
 # 이 저장소로 돌아왔을 때 (인수인계)
 
-> 마지막 갱신: 2026-11-26 — **프로젝트 마무리** (② LangChain 줄인 버전·디자인 A·README 데모·2차 회고, Claude에게 위임해 브랜치 `chore/wrap-up`)
+> 마지막 갱신: 2026-11-27 — **v1.0.0 릴리스** (11/26 프로젝트 마무리 뒤 시연 안내·API 명세·발표 자료를 더하고 출시 표시)
 > 여러 PC(학원·집)에서 이어서 작업하므로, 세션을 시작하면 이 파일을 먼저 읽는다.
 
 ---
@@ -25,7 +25,7 @@
 - **2차 실험(가이드 모드, 내가 직접) 완료** — ① 협업 기반: 라벨·보드·이슈, 템플릿(PR #45), CI(PR #46), 브랜치 보호(#43), 시크릿 검사 확인(#44)
 - **마무리(11/26, Claude에게 위임) 완료** — 디자인 A(환자·보호자 화면), LangChain RAG 비교(`rag_langchain/`), README 데모(`docs/images/`, `scripts/capture_demo.py`), 2차 회고
   - ③ 배포·④ PWA·⑤ 앱은 **이 프로젝트에서 하지 않음** (하려면 새 프로젝트)
-- 저장소: **GitHub Public**, README 맨 위에 "Claude Code 활용 실험" 안내. 원격 브랜치는 `main` 하나, 태그·릴리스 없음.
+- 저장소: **GitHub Public**, README 맨 위에 "Claude Code 활용 실험" 안내. 원격 브랜치는 `main` 하나. **릴리스 `v1.0.0`(11/27)** — 태그는 PR #55 머지 커밋 `e2a559c`. 이후 바뀐 것은 다음 버전(`v1.0.1` 문서 수정, `v1.1.0` 기능 추가)으로.
   커밋 이메일은 GitHub noreply 주소 (`git config --local user.email`, **다른 PC에서도 한 번 설정 필요**)
 - DB: 테이블 10개 (`docs/ERD.md`). Hibernate가 MySQL에서 enum을 `enum(...)` 칸으로 만들므로,
   **enum에 새 값을 넣을 땐 `@JdbcTypeCode(SqlTypes.VARCHAR)`** (LoginHistory·ControlEvent 참고)
@@ -42,6 +42,7 @@
 | 순서 | 할 일 | 메모 |
 |---|---|---|
 | ✅ | 마무리 PR #51 머지, 2차 회고 14장 소감 (11/26) | 이 프로젝트는 마무리됨. 새로 할 일은 없음 |
+| ✅ | **v1.0.0 릴리스 (11/27)** | GitHub Releases의 "v1.0.0 — 첫 완성본". 릴리스 노트의 문서 링크는 태그 기준(`blob/v1.0.0/...`)이라 나중에 main이 바뀌어도 그때 모습을 가리킴 |
 | 참고 | **포트폴리오 자료 (11/26)** | API 명세 `docs/api-spec.md`(코드 기준, 코드 바꾸면 함께 수정). 발표 자료 12장은 claude.ai 아티팩트 "Nuada Airgetlám — 포트폴리오"(비공개, PDF·PPTX로 내려받기 가능, 표지의 `[이름]` 직접 채우기). 보기 화면에서 받은 PDF는 대본이 함께 인쇄돼 슬라이드가 작게 나왔음 → 제출용은 노트 없는 PDF를 따로 만들어 둠(11/27, 저장소 밖) |
 | 참고 | **다른 컴퓨터에서 시연할 때** | `docs/demo-guide.md` — `git clone` → `.env`(Gemini 키만 옮기고 나머지는 새로 만들어도 됨) → `docker compose up -d --build` → 8081 |
 | 참고 | README 데모를 다시 찍을 때 | Docker 시연 환경 + 세션 진행 중 → `python scripts\capture_demo.py`. 이 PC에서는 Chrome이 재생기를 밀어내 "오래된 명령"이 날 수 있어 스크립트가 안정될 때까지 기다림. Gemini가 503이면 잠시 뒤 다시 |
