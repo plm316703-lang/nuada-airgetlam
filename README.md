@@ -8,11 +8,11 @@
 > 관제 화면 데모 (약 16초): 정상 동작 → 시연용 **전극 불량** 주입 → 관문이 차단해 팔이 그 자리에 정지,
 > 채널 지도에 문제 채널(C3·Cz·C4) 표시 → RAG가 매뉴얼 근거로 점검 안내 → 연속 정상 데이터가 쌓인 뒤 **사람이 수동 재개**
 
-> **이 저장소는 AI 코딩 에이전트(Claude Code) 활용 실험이며, 2026-11-26 마무리했습니다.**
+> **이 저장소는 AI 코딩 에이전트(Claude Code) 활용 실험이며, 2026-11-27 [v1.0.0 릴리스](https://github.com/plm316703-lang/nuada-airgetlam/releases/tag/v1.0.0)로 마무리했습니다.**
 > 1. **1차 실험 (11/20) — 맡기기:** 구현의 대부분을 Claude Code가 맡았고, 저는 설계를 결정하고 모든 단계를 직접 실행해 확인했습니다.
 > 2. **2차 실험 (11/21~11/26) — 직접 하기:** 1차 회고의 "AI가 만든 코드가 블랙박스가 된다"는 문제를 줄이려고,
 >    협업 기반(이슈·템플릿·CI·브랜치 보호)은 **제가 직접** 하고 Claude Code는 안내·설명·리뷰만 했습니다 (가이드 모드).
-> 3. **마무리 (11/26) — 다시 맡기기:** 남은 일(환자·보호자 화면 개선, LangChain RAG 비교, 이 README의 데모)은 Claude Code에게 위임했습니다.
+> 3. **마무리 (11/26~11/27) — 다시 맡기기:** 남은 일(환자·보호자 화면 개선, LangChain RAG 비교, 이 README의 데모, 시연 안내, API 명세, 릴리스)은 Claude Code에게 위임했습니다.
 >    배포·PWA·모바일 앱은 이 프로젝트에서 하지 않기로 했습니다 ([`docs/roadmap.md`](docs/roadmap.md) 11/26 결정).
 >
 > 무엇을 AI가 했고, 무엇을 제가 결정했고, AI가 틀린 것을 어떻게 잡았는지는 아래 문서에 그대로 남겼습니다.
@@ -99,3 +99,12 @@ nuada-airgetlam/
 
 두 방법 모두 저장소 최상위 `.env`(견본: `.env.example`) 하나를 읽습니다.
 REST API 29개·WebSocket·RAG API는 [docs/api-spec.md](docs/api-spec.md), 관문 메시지 규격과 검사 순서는 [docs/message-spec.md](docs/message-spec.md), DB 테이블 10개와 설계 이유는 [docs/ERD.md](docs/ERD.md).
+
+## 알려진 한계
+
+- 실제 뇌파 장비가 아니라 공개 데이터(BCI Competition IV 2a, 피험자 3)를 재생해 판별합니다.
+- 클라우드 배포와 운영(모니터링·백업)은 하지 않았습니다. 로컬 또는 Docker Compose로 실행합니다.
+- Gemini 무료 모델이 과부하(503)일 때는 안내문 생성에 실패하고, 찾은 매뉴얼 근거만 표시됩니다.
+- CPU가 적은 PC에서 화면 녹화처럼 무거운 프로그램을 함께 돌리면 메시지가 늦어 관문이 "오래된 명령"으로 차단할 수 있습니다.
+- 남겨 둔 기술 부채: Windows에서 받은 `gradlew`의 줄끝(CRLF)을 Dockerfile에서 고쳐 쓰고 있고(`.gitattributes`로 고정하는 것이 정석),
+  `ai-server-python/realtime/step12_reject_test.py`는 서버를 띄워야 돌아가는 수동 시험이라 CI에 넣지 않았습니다(Java 테스트로 옮길 후보).
